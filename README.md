@@ -6,7 +6,7 @@
 
 2. Change into the project directory:
 
-   `cd fastapi-mysql-sqlalchemy`
+   `cd main-backend`
 
 3. Install the required dependencies:
 
