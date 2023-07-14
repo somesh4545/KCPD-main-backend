@@ -46,7 +46,7 @@ async def get_new_documents(user_type: str,db:Session=Depends(get_db)):
 @adminRouter.post('/documents')
 async def approve_document(user_type: str, document_id: int, user_id:int, db:Session=Depends(get_db) ):
     # check the validity of doc id with that in database
-    document = db.query(DOCUMENTS).filter(and_(DOCUMENTS.id == document_id)).first()
+    document = db.query(DOCUMENTS).filter(and_(DOCUMENTS.id == document_id, DOCUMENTS.user_id==user_id)).first()
     if document is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -56,7 +56,22 @@ async def approve_document(user_type: str, document_id: int, user_id:int, db:Ses
     document.verified = True
 
     # check if any pending document of that user
-    # count = db.query()
+    count = db.query(DOCUMENTS).filter(and_(DOCUMENTS.user_id==user_id, DOCUMENTS.verified==False)).count()
+
+    if count == 0 and user_type=='player':
+        player = db.query(PLAYERS).filter(PLAYERS.id==user_id).first()
+        player.verified = True
+        db.add(player)
+
+    if count == 0 and user_type=='organizer':
+        organizer = db.query(ORGANIZERS).filter(ORGANIZERS.id==user_id).first()
+        organizer.verified = True
+        db.add(organizer)
 
     db.add(document)
     db.commit()
+
+    return {
+        'status': 'success',
+        'message': 'documents verified',
+    }
