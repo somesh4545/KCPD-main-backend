@@ -14,6 +14,17 @@ playersRouter = APIRouter()
 async def fetch_all_users(db: Session = Depends(get_db)):
     return db.query(PLAYERS).all()
 
+
+@playersRouter.get('/{playerMail}')
+async def fetch_org_by_mail(playerMail, db: Session = Depends(get_db)):
+    player = db.query(PLAYERS).filter(PLAYERS.email_id == playerMail).first()
+    if player is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Player not found"
+        )
+    return player
+
 # adding new player to db
 @playersRouter.post('/auth')
 async def add_new_player(player: Player, db: Session = Depends(get_db)):
@@ -58,6 +69,7 @@ async def player_login(email_id: str, password: str, db: Session = Depends(get_d
     return {
         'status': 'success',
         'message': 'login successfully',
+        'data': player,
         "access_token": create_access_token(player.email_id),
         "refresh_token": create_refresh_token(player.email_id),
     }

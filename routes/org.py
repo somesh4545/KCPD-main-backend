@@ -21,7 +21,7 @@ async def fetch_all_org(db: Session = Depends(get_db)):
     return  db.query(ORGANIZERS).all()
 
 @organizerRouter.get('/{orgMail}')
-async def fetch_all_org(orgMail, db: Session = Depends(get_db)):
+async def fetch_org_by_mail(orgMail, db: Session = Depends(get_db)):
     organizer = db.query(ORGANIZERS).filter(ORGANIZERS.email_id == orgMail).first()
     if organizer is None:
         raise HTTPException(
@@ -50,6 +50,7 @@ async def organizer_login(email_id: str, password: str, db: Session=Depends(get_
     return {
         'status': 'success',
         'message': 'login successfully',
+        'data': organizer,
         "access_token": create_access_token(organizer.email_id),
         "refresh_token": create_refresh_token(organizer.email_id),
     }
