@@ -51,7 +51,7 @@ async def add_new_player(player: Player, db: Session = Depends(get_db)):
 
 # login functionality with access token creation
 @playersRouter.post('/login')
-async def player_login(data: Login, response=Response, db: Session = Depends(get_db)):
+async def player_login(data: Login, response:Response, db: Session = Depends(get_db)):
     player = db.query(PLAYERS).filter(PLAYERS.email_id == data.email_id).first()
     if player is None:
         raise HTTPException(
