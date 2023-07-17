@@ -23,3 +23,7 @@ class Document(BaseModel):
 class TokenPayload(BaseModel):
     sub: str = None
     exp: int = None
+
+class Login(BaseModel):
+    email_id: str
+    password: str

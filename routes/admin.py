@@ -1,6 +1,6 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Response
 from models.index import ORGANIZERS, DOCUMENTS, PLAYERS
-from schemas.index import Organizer, Document
+from schemas.index import Organizer, Document, Login
 from sqlalchemy.orm import Session 
 from fastapi import Depends
 from config.db import get_db
@@ -15,15 +15,15 @@ adminRouter = APIRouter()
 # async def fetch_all_org(db: Session = Depends(get_db)):
 #     return  db.query(ORGANIZERS).all()
 
-@adminRouter.get('/login')
-async def admin_login(username:str, password:str, db:Session=Depends(get_db)):
-    if username=="admin" and password=="this this":
-        
+@adminRouter.post('/login')
+async def admin_login(data: Login, response: Response, db:Session=Depends(get_db)):
+    if data.email_id=="admin" and data.password=="this this":
+        response.set_cookie(key="access_token", value=create_access_token("admin"))
+        response.set_cookie(key="refresh_token", value=create_refresh_token("admin"))
+        response.set_cookie(key="user_type", value="admin")
         return {
             'status': 'success',
             'message': 'login successfully',
-            "access_token": create_access_token('admin'),
-            "refresh_token": create_refresh_token('admin'),
         }
     else:
         raise HTTPException(

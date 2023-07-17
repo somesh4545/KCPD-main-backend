@@ -1,6 +1,6 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Response
 from models.index import ORGANIZERS, DOCUMENTS
-from schemas.index import Organizer, Document
+from schemas.index import Organizer, Document, Login
 from sqlalchemy.orm import Session 
 from fastapi import Depends
 from config.db import get_db
@@ -31,9 +31,9 @@ async def fetch_org_by_mail(orgMail, db: Session = Depends(get_db)):
     return organizer
 
 # login functionality with access token creation
-@organizerRouter.get('/auth')
-async def organizer_login(email_id: str, password: str, db: Session=Depends(get_db)):
-    organizer = db.query(ORGANIZERS).filter(ORGANIZERS.email_id == email_id).first()
+@organizerRouter.post('/login')
+async def organizer_login(data: Login, response: Response, db: Session=Depends(get_db)):
+    organizer = db.query(ORGANIZERS).filter(ORGANIZERS.email_id == data.email_id).first()
     if organizer is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -41,22 +41,24 @@ async def organizer_login(email_id: str, password: str, db: Session=Depends(get_
         )
 
     hashed_pass = organizer.password
-    if not verify_password(password, hashed_pass):
+    if not verify_password(data.password, hashed_pass):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
         )
     
+    response.set_cookie(key="access_token", value=create_access_token(organizer.email_id))
+    response.set_cookie(key="refresh_token", value=create_refresh_token(organizer.email_id))
+    response.set_cookie(key="user_type", value="organizer")
+    
     return {
         'status': 'success',
         'message': 'login successfully',
-        'data': organizer,
-        "access_token": create_access_token(organizer.email_id),
-        "refresh_token": create_refresh_token(organizer.email_id),
+        'data': organizer
     }
 
-# adding new player to db
-@organizerRouter.post('/auth')
+# adding new org to db
+@organizerRouter.post('/register')
 async def add_new_organizer(organizer: Organizer, db: Session = Depends(get_db)):
 
     #check if organizer with same email exists
@@ -80,7 +82,7 @@ async def add_new_organizer(organizer: Organizer, db: Session = Depends(get_db))
 
 
 # update certain fields of the organizer
-@organizerRouter.patch("/auth")
+@organizerRouter.patch("/details")
 async def organizer_update(user: str = Depends(get_current_user), updated_data: dict = {}, db: Session=Depends(get_db)):
     organizer = db.query(ORGANIZERS).filter(ORGANIZERS.email_id == user).first()
     if organizer is None:

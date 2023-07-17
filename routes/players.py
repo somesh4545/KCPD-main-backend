@@ -1,6 +1,6 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Response
 from models.index import PLAYERS, DOCUMENTS
-from schemas.index import Player, Document
+from schemas.index import Player, Document, Login
 from sqlalchemy.orm import Session 
 from fastapi import Depends
 from config.db import get_db
@@ -26,7 +26,7 @@ async def fetch_org_by_mail(playerMail, db: Session = Depends(get_db)):
     return player
 
 # adding new player to db
-@playersRouter.post('/auth')
+@playersRouter.post('/register')
 async def add_new_player(player: Player, db: Session = Depends(get_db)):
 
     #check if player with same email exists
@@ -50,9 +50,9 @@ async def add_new_player(player: Player, db: Session = Depends(get_db)):
 
 
 # login functionality with access token creation
-@playersRouter.get('/auth')
-async def player_login(email_id: str, password: str, db: Session = Depends(get_db)):
-    player = db.query(PLAYERS).filter(PLAYERS.email_id == email_id).first()
+@playersRouter.post('/login')
+async def player_login(data: Login, response=Response, db: Session = Depends(get_db)):
+    player = db.query(PLAYERS).filter(PLAYERS.email_id == data.email_id).first()
     if player is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -60,22 +60,24 @@ async def player_login(email_id: str, password: str, db: Session = Depends(get_d
         )
 
     hashed_pass = player.password
-    if not verify_password(password, hashed_pass):
+    if not verify_password(data.password, hashed_pass):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password"
         )
     
+    response.set_cookie(key="access_token", value=create_access_token(player.email_id))
+    response.set_cookie(key="refresh_token", value=create_refresh_token(player.email_id))
+    response.set_cookie(key="user_type", value="player")
+
     return {
         'status': 'success',
         'message': 'login successfully',
-        'data': player,
-        "access_token": create_access_token(player.email_id),
-        "refresh_token": create_refresh_token(player.email_id),
+        'data': player
     }
 
 # update certain fields of the player
-@playersRouter.patch("/auth")
+@playersRouter.patch("/details")
 async def player_update(user: str = Depends(get_current_user), updated_data: dict = {}, db: Session=Depends(get_db)):
     player = db.query(PLAYERS).filter(PLAYERS.email_id == user).first()
     if player is None:
