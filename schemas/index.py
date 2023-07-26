@@ -1,6 +1,13 @@
 from pydantic import BaseModel
 import datetime
 
+class User(BaseModel):
+    email_id: str
+    first_name: str
+    last_name: str
+    phone_no: str
+    password: str
+
 class Player(BaseModel):
     name: str
     email_id: str
@@ -15,8 +22,7 @@ class Organizer(BaseModel):
     password: str
 
 class Document(BaseModel):
-    user_type: str
-    user_id: int
+    user_id: str
     document_type: str
     document_url: str
 

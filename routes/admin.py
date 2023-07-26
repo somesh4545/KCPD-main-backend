@@ -1,11 +1,11 @@
 from fastapi import APIRouter, status, HTTPException, Response
-from models.index import ORGANIZERS, DOCUMENTS, PLAYERS
+from models.index import ORGANIZERS, DOCUMENTS, USERS
 from schemas.index import Organizer, Document, Login
 from sqlalchemy.orm import Session 
 from fastapi import Depends
 from config.db import get_db
 from utils.jwt import get_hashed_password, verify_password, create_refresh_token, create_access_token, get_current_user
-from sqlalchemy import and_, select
+from sqlalchemy import and_, or_
 from utils.jwt import get_hashed_password, verify_password, create_refresh_token, create_access_token, get_current_user
 
 
@@ -18,12 +18,10 @@ adminRouter = APIRouter()
 @adminRouter.post('/login')
 async def admin_login(data: Login, response: Response, db:Session=Depends(get_db)):
     if data.email_id=="admin" and data.password=="this this":
-        response.set_cookie(key="access_token", value=create_access_token("admin"))
-        response.set_cookie(key="refresh_token", value=create_refresh_token("admin"))
-        response.set_cookie(key="user_type", value="admin")
         return {
             'status': 'success',
             'message': 'login successfully',
+            'token': create_access_token("admin")
         }
     else:
         raise HTTPException(
@@ -33,40 +31,38 @@ async def admin_login(data: Login, response: Response, db:Session=Depends(get_db
     
 # getting player and organizers documents to verifiy
 @adminRouter.get('/documents')
-async def get_new_documents(user_type: str,db:Session=Depends(get_db)):
-    documents = db.query(DOCUMENTS).filter(and_(DOCUMENTS.user_type==user_type, DOCUMENTS.verified==False)).all()
+async def get_new_documents(db:Session=Depends(get_db)):
+    documents = db.query(DOCUMENTS).filter(DOCUMENTS.verified==False).all()
 
     return {
         'status': 'success',
-        'message': 'found '+user_type+' applications',
+        'message': 'found applications',
         'data': documents
     }
 
 # approving documents and if all documents are verified then verify their account
 @adminRouter.post('/documents')
-async def approve_document(user_type: str, document_id: int, user_id:int, db:Session=Depends(get_db) ):
+async def approve_document( document_id: int, is_approve: bool, user_id:str, db:Session=Depends(get_db) ):
     # check the validity of doc id with that in database
-    document = db.query(DOCUMENTS).filter(and_(DOCUMENTS.id == document_id, DOCUMENTS.user_id==user_id)).first()
+    document = db.query(DOCUMENTS).filter(DOCUMENTS.id == document_id).first()
     if document is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid document id provided"
         )
-
-    document.verified = True
+    
+    if is_approve:
+        document.verified = 1
+    else:
+        document.verified = -1
 
     # check if any pending document of that user
-    count = db.query(DOCUMENTS).filter(and_(DOCUMENTS.user_id==user_id, DOCUMENTS.verified==False)).count()
+    count = db.query(DOCUMENTS).filter(and_(DOCUMENTS.user_id==user_id, or_( DOCUMENTS.verified==0, DOCUMENTS.verified==-1 ))).count()
 
-    if count == 0 and user_type=='player':
-        player = db.query(PLAYERS).filter(PLAYERS.id==user_id).first()
-        player.verified = True
-        db.add(player)
-
-    if count == 0 and user_type=='organizer':
-        organizer = db.query(ORGANIZERS).filter(ORGANIZERS.id==user_id).first()
-        organizer.verified = True
-        db.add(organizer)
+    if count == 0:
+        user = db.query(USERS).filter(USERS.id==user_id).first()
+        user.verified = True
+        db.add(user)
 
     db.add(document)
     db.commit()
