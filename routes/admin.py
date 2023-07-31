@@ -50,19 +50,20 @@ async def approve_document( document_id: int, is_approve: bool, user_id:str, db:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid document id provided"
         )
+    user = db.query(USERS).filter(USERS.id==user_id).first()
     
     if is_approve:
         document.verified = 1
+        # check if any pending document of that user
+        count = db.query(DOCUMENTS).filter(and_(DOCUMENTS.user_id==user_id, or_( DOCUMENTS.verified==0, DOCUMENTS.verified==-1 ))).count()
+        if count == 0:
+            user.verified = True
     else:
+        user.verified = False
         document.verified = -1
 
-    # check if any pending document of that user
-    count = db.query(DOCUMENTS).filter(and_(DOCUMENTS.user_id==user_id, or_( DOCUMENTS.verified==0, DOCUMENTS.verified==-1 ))).count()
-
-    if count == 0:
-        user = db.query(USERS).filter(USERS.id==user_id).first()
-        user.verified = True
-        db.add(user)
+    
+    db.add(user)
 
     db.add(document)
     db.commit()

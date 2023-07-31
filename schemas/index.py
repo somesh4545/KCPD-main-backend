@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 import datetime
+from typing import Optional, Any
 
 class User(BaseModel):
     email_id: str
@@ -21,6 +22,29 @@ class Organizer(BaseModel):
     mobile_number: str
     password: str
 
+class Tournament(BaseModel):
+    name: str
+    about: str
+    organizer_id: str
+    start_date: datetime.date
+    end_date: datetime.date
+    is_payment_done: bool = False
+
+class Tournament_Games(BaseModel):
+    name: str
+    info: str = None
+    tournament_id :str
+    game_id: int
+    participation_fees: int
+    prize_pool: int
+    max_teams: int
+    team_size: int
+    min_girls: int
+    min_boys: int
+    open_to: str
+    total_rounds: int
+    qualification_method: str
+
 class Document(BaseModel):
     user_id: str
     document_type: str
@@ -33,3 +57,11 @@ class TokenPayload(BaseModel):
 class Login(BaseModel):
     email_id: str
     password: str
+
+class GenericResponseModel(BaseModel):
+    """Generic response model for all responses"""
+    api_id: Optional[str] = None
+    status: Optional[str]
+    message: Optional[str]
+    data: Any = None
+    status_code: Optional[int] = None

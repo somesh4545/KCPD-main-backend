@@ -11,18 +11,14 @@ class USERS(Base):
     id = Column(String(15), primary_key=True, index=True)
     first_name = Column(String(80))
     last_name = Column(String(80))
-    email_id = Column(String(80), nullable=False)
-    phone_no = Column(String(20), nullable=False)
+    email_id = Column(String(80), nullable=False, unique=True)
+    phone_no = Column(String(20), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
     verified = Column(Integer, default=0)
     gender = Column(String(10), default=None)
     dob = Column(Date, default=None)
     profile_url = Column(String(150), default="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJJ7NRetidOXGwJVnAJXbKD-aTCpm2iDzT6g&usqp=CAU")
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
-
-
-    def __repr__(self):
-        return 'ItemModel(name=%s)' % (self.name)
 
     
 class PLAYERS(Base):
@@ -34,8 +30,6 @@ class PLAYERS(Base):
     ranking  = Column(Integer, default=1)
     plays = Column(String(100))
 
-    def __repr__(self):
-        return 'ItemModel(name=%s)' % (self.name)
 
 class ORGANIZERS(Base):
     __tablename__ = "ORGANIZERS"
@@ -60,6 +54,38 @@ class DOCUMENTS(Base):
     verified = Column(Integer, default=0)
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
 
-    def __repr__(self):
-        return 'ItemModel(name=%s)' % (self.name)
     
+class TOURNAMENT(Base):
+    __tablename__ = "TOURNAMENT"
+    id = Column(String(15), primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    about = Column(String(100), nullable=False)
+    organizer_id = Column(String(15), ForeignKey("USERS.id", ondelete="CASCADE"), nullable=False)
+    organzier = relationship("USERS")
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    is_payment_done = Column(Boolean, default=False)
+
+class GAMES(Base):
+    __tablename__ = "GAMES"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+
+class TOURNAMENT_GAMES(Base):
+    __tablename__ = "TOURNAMENT_GAMES"
+    id = Column(Integer, primary_key=True,index=True)    
+    name = Column(String(100), nullable=False)
+    info = Column(String(100), default=None)
+    tournament_id = Column(String(15), ForeignKey('TOURNAMENT.id',ondelete="CASCADE"), nullable=False)
+    tournament = relationship("TOURNAMENT")
+    game_id = Column(Integer, ForeignKey('GAMES.id',ondelete="CASCADE"), nullable=False)
+    game = relationship("GAMES")
+    participation_fees = Column(Integer, default=0)
+    prize_pool = Column(Integer, default=0)
+    max_teams = Column(Integer, default=8)
+    team_size = Column(Integer, default=1)
+    min_girls = Column(Integer)
+    min_boys= Column(Integer)
+    open_to  = Column(String(10), default="Boys")
+    total_rounds = Column(Integer, default=3)
+    qualification_method = Column(String(10), default="Single Elimintation")
