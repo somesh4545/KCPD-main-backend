@@ -90,3 +90,27 @@ class TOURNAMENT_GAMES(Base):
     open_to  = Column(String(10), default="Boys")
     total_rounds = Column(Integer, default=3)
     qualification_method = Column(String(10), default="Single Elimintation")
+
+
+class TEAMS(Base):
+    __tablename__ = "TEAMS"
+    id = Column(String(30), primary_key=True,index=True)    
+    name = Column(String(100), nullable=False)
+    admin_id = Column(String(30), ForeignKey("USERS.id"), nullable=False)
+    admin = relationship("USERS")
+    tournament_id = Column(String(30), ForeignKey('TOURNAMENT.id',ondelete="CASCADE"), nullable=False)
+    tournament = relationship("TOURNAMENT")
+    tournament_game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id',ondelete="CASCADE"), nullable=False)
+    tournament_game = relationship("TOURNAMENT_GAMES")
+    verified = Column(Integer, default=0)
+    createdAt = Column(DateTime, default=datetime.datetime.utcnow)
+
+class TEAM_PLAYERS(Base):
+    __tablename__ = "TEAM_PLAYERS"
+    id = Column(Integer, primary_key=True,index=True)  
+    team_id = Column(String(30), nullable=False)
+    team = relationship("TEAMS")
+    player_id = Column(String(30), nullable=False)
+    player = relationship("USERS")
+    createdAt = Column(DateTime, default=datetime.datetime.utcnow)
+    

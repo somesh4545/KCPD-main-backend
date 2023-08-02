@@ -66,3 +66,13 @@ class GenericResponseModel(BaseModel):
     message: Optional[str]
     data: Any = None
     status_code: Optional[int] = None
+
+class Teams(BaseModel):
+    name: str
+    admin_id: str
+    tournament_id: str
+    tournament_game_id: str
+
+class TeamPlayers(BaseModel):
+    team_id: str
+    player_id: str
