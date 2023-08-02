@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes.index import playersRouter, organizerRouter, adminRouter, userRouter
+from routes.index import playersRouter, organizerRouter, adminRouter, userRouter,tournamentRouter
 from config.db import get_db, engine
 import models.index as models
 # from fastapi_pagination import add_pagination
@@ -17,4 +17,6 @@ def backend_testing():
 app.include_router(userRouter, prefix="/users")
 app.include_router(playersRouter, prefix='/players')
 app.include_router(organizerRouter, prefix='/organizer')
+app.include_router(tournamentRouter, prefix='/tournaments')
+
 app.include_router(adminRouter, prefix='/admin')

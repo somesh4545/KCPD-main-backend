@@ -34,7 +34,7 @@ async def fetch_all_users(db: Session = Depends(get_db)):
 
 # login functionality with access token creation
 @userRouter.post('/login')
-async def user_login(data: Login, response: Response, db: Session=Depends(get_db)):
+async def user_login(data: Login, db: Session=Depends(get_db)):
     user = db.query(USERS).filter(USERS.email_id == data.email_id).first()
     if user is None:
         raise HTTPException(
@@ -135,3 +135,7 @@ async def user_documents_upload( user_id: str=Depends(get_current_user), db:Sess
     document_list = [model_to_dict(doc) for doc in documents]
     return GenericResponseModel(status='success',data=document_list, message='data found successfully', status_code=http.HTTPStatus.CREATED)
     
+# to delete certain document 
+@userRouter.delete('/document')
+async def delete_document( user_id: str=Depends(get_current_user), db:Session=Depends(get_db)):
+    return 'will be added in future'

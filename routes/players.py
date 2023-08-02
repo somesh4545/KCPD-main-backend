@@ -17,3 +17,7 @@ async def fetch_all_players(db: Session = Depends(get_db)):
 @playersRouter.post('/plays')
 async def add_plays(game: str, user_id: str, db: Session = Depends(get_db)):
     pass
+
+# @playersRouter.post('/join_game')
+# async def join_game( is_admin: bool, team_id: , ):
+#     pass
