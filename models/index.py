@@ -15,7 +15,7 @@ class USERS(Base):
     phone_no = Column(String(20), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
     verified = Column(Integer, default=0)
-    gender = Column(String(20), default=None)
+    gender = Column(Integer, default=None)
     dob = Column(Date, default=None)
     profile_url = Column(String(150), default="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTJJ7NRetidOXGwJVnAJXbKD-aTCpm2iDzT6g&usqp=CAU")
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
@@ -87,9 +87,10 @@ class TOURNAMENT_GAMES(Base):
     team_size = Column(Integer, default=1)
     min_girls = Column(Integer)
     min_boys= Column(Integer)
-    open_to  = Column(String(10), default="Boys")
+    open_to  = Column(Integer, default=None)
     total_rounds = Column(Integer, default=3)
     qualification_method = Column(String(10), default="Single Elimintation")
+    is_active = Column(Boolean, default=True)
 
 
 class TEAMS(Base):
@@ -108,9 +109,9 @@ class TEAMS(Base):
 class TEAM_PLAYERS(Base):
     __tablename__ = "TEAM_PLAYERS"
     id = Column(Integer, primary_key=True,index=True)  
-    team_id = Column(String(30), nullable=False)
+    team_id = Column(String(30), ForeignKey('TEAMS.id',ondelete="CASCADE"), nullable=False)
     team = relationship("TEAMS")
-    player_id = Column(String(30), nullable=False)
+    player_id = Column(String(30), ForeignKey('USERS.id',ondelete="CASCADE"), nullable=False)
     player = relationship("USERS")
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
     

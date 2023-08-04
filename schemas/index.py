@@ -42,7 +42,7 @@ class Tournament_Games(BaseModel):
     team_size: int
     min_girls: int
     min_boys: int
-    open_to: str
+    open_to: int
     total_rounds: int
     qualification_method: str
 

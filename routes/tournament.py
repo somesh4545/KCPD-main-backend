@@ -4,7 +4,7 @@ from schemas.index import Organizer, Tournament,GenericResponseModel
 from sqlalchemy.orm import Session, joinedload
 from fastapi import Depends
 from config.db import get_db
-from utils.jwt import get_hashed_password, verify_password, create_refresh_token, create_access_token, get_current_user
+from utils.jwt import  get_current_user
 from uuid import uuid4
 from sqlalchemy import and_, select
 from uuid import uuid4
