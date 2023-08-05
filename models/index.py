@@ -105,6 +105,7 @@ class TEAMS(Base):
     tournament = relationship("TOURNAMENT")
     tournament_game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id',ondelete="CASCADE"), nullable=False)
     tournament_game = relationship("TOURNAMENT_GAMES")
+    # 0 denotes yet to verify 1(verified) -1(rejected)
     verified = Column(Integer, default=0)
     no_of_boys = Column(Integer, nullable=False)
     no_of_girls = Column(Integer, nullable=False)

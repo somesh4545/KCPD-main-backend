@@ -31,3 +31,8 @@ async def get_tournaments(page: int = Query(0, ge=0), limit: int = Query(5, le=1
 @tournamentRouter.get('/{tournament_id}')
 async def get_tournament_by_id(tournament_id: str, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
     return TournamentService(db).get_tournament_by_id(tournament_id)
+
+@tournamentRouter.get('/{tournament_id}/games')
+async def get_tournament_games(tournament_id: str,user_id: str = Depends(get_current_user),  db: Session = Depends(get_db))->GenericResponseModel:
+    response = TournamentService(db).get_tournament_games(tournament_id, user_id)
+    return response

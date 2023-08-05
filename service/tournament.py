@@ -14,7 +14,6 @@ class TournamentService():
     
 
     def create_tournament(self, tournament: Tournament):
-        print("\ndata1\n")
         t = TOURNAMENT(**tournament.dict())
         t.id = shortuuid.uuid()[:16]
         self.db.add(t)
@@ -49,6 +48,12 @@ class TournamentService():
         if tournament is None:
             return GenericResponseModel(status='error', message='Tournament not found or invalid data', status_code=http.HTTPStatus.BAD_REQUEST)
         return {'status': 'success', 'data': tournament, 'message': 'Tournament details found', 'status_code':http.HTTPStatus.ACCEPTED}
+
+
+    def get_tournament_games(self, tournament_id: str, user_id: str):
+        games = self.db.query(TOURNAMENT_GAMES).filter(TOURNAMENT_GAMES.tournament_id==tournament_id).all()
+        g_list = [model_to_dict(g) for g in games]
+        return GenericResponseModel(status='success', message='Games', data=g_list, status_code=http.HTTPStatus.ACCEPTED)
     
 
     def add_game(self, game: Tournament_Games,tournament_id: str, user_id: str):
@@ -71,8 +76,7 @@ class TournamentService():
 
 
     # to check if user already registerd for the given tournament game or not
-    def check_if_registered(self, user_id: str, tournament_id: str, tournament_game_id: str, team_id: str=None):
-        
+    def check_if_registered(self, user_id: str, tournament_id: str, tournament_game_id: str, team_id: str=None): 
         return False
     
     def calculate_age(self, dob: datetime) -> int:
@@ -135,9 +139,6 @@ class TournamentService():
                     team_obj.no_of_girls += 1
                 self.db.add(team_obj)
 
-
-
-        
         return True
 
 
@@ -146,8 +147,6 @@ class TournamentService():
         if checker_result is not True:
             return checker_result
         
-        print("\n\nReached after checker result if\n\n")
-
         team_obj = TEAMS(**team.dict())
         team_obj.id = shortuuid.uuid()[:16]
         team_id = team_obj.id
@@ -173,3 +172,32 @@ class TournamentService():
         self.db.commit()
         return GenericResponseModel(status='success', message='Team player added successfully',  status_code=http.HTTPStatus.ACCEPTED)
         
+
+    # service for getting registered teams for the given tournament and game id
+    def get_registered_teams(self, tournament_id: str, tournament_game_id: str):
+        registered_teams = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id)).all()
+
+        if registered_teams is None or len(registered_teams)==0:
+            return GenericResponseModel(status='error', message='Invalid tournament id or game id or no teams found', status_code=http.HTTPStatus.BAD_REQUEST)
+
+        teams_list = [model_to_dict(t) for t in registered_teams]
+        return GenericResponseModel(status='success', message='Teams registered', data=teams_list, status_code=http.HTTPStatus.ACCEPTED)
+    
+    
+    def team_verification(self,tournament_id: str, tournament_game_id: str, team_id: str, approve: str, max_teams: int):
+        count = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id, TEAMS.verified==1)).count()
+        if count == max_teams and approve==True:
+            return GenericResponseModel(status='error', message='Max teams approved', status_code=http.HTTPStatus.BAD_REQUEST)
+        
+        team = self.db.query(TEAMS).filter(TEAMS.id==team_id).first()
+        team.verified = 1 if approve==True else -1
+        self.db.add(team)
+
+        if approve==True and count+1 == max_teams:
+            self.db.query(TEAMS).filter(and_(TEAMS.tournament_id == tournament_id, TEAMS.tournament_game_id == tournament_game_id, TEAMS.verified == 0)).update({TEAMS.verified: -1})
+            self.db.commit()    
+            return GenericResponseModel(status='success', message='Teams approved, Max teams approved', status_code=http.HTTPStatus.BAD_REQUEST)
+            # return GenericResponseModel(status='success', message='Teams approved, Please reload max teams reached', status_code=http.HTTPStatus.BAD_REQUEST)
+
+        self.db.commit()
+        return GenericResponseModel(status='success', message='Teams approved, Reload if needed', status_code=http.HTTPStatus.BAD_REQUEST)
