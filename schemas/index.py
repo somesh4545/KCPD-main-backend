@@ -45,6 +45,8 @@ class Tournament_Games(BaseModel):
     open_to: int
     total_rounds: int
     qualification_method: str
+    min_age: int
+    max_age: int
 
 class Document(BaseModel):
     user_id: str
@@ -72,6 +74,8 @@ class Teams(BaseModel):
     admin_id: str
     tournament_id: str
     tournament_game_id: str
+    no_of_boys: int
+    no_of_girls: int
 
 class TeamPlayers(BaseModel):
     team_id: str

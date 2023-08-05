@@ -24,6 +24,6 @@ async def join_game(team: Teams, user_id: str=Depends(get_current_user), db: Ses
     return TournamentService(db).create_team(team, user_id)
     
 @playersRouter.post('/join_team')
-async def join_team(team_id: str, tournament_id: str, tournament_game_id: str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db)):
-    return TournamentService(db).join_team(tournament_id, tournament_game_id, team_id, user_id)
+async def join_team(team: Teams,  team_id: str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db)):
+    return TournamentService(db).join_team(team, team_id, user_id)
     

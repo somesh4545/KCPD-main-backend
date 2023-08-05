@@ -5,6 +5,7 @@ from sqlalchemy import and_
 import shortuuid
 from utils.general import model_to_dict
 import http
+from datetime import datetime
 
 class TournamentService():
 
@@ -71,40 +72,81 @@ class TournamentService():
 
     # to check if user already registerd for the given tournament game or not
     def check_if_registered(self, user_id: str, tournament_id: str, tournament_game_id: str, team_id: str=None):
-        count1 = self.db.query(TEAMS).filter(and_(TEAMS.admin_id==user_id, TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id)).count()
-        count2 = 0
-        if team_id is not None:
-            count2 = self.db.query(TEAM_PLAYERS).filter(and_(TEAM_PLAYERS.team_id==team_id, TEAM_PLAYERS.player_id==user_id)).count()
-        if count1 == 0 and count2==0:
-            return True
+        
         return False
-
     
-    def checker(self, team: Teams, user_id: str):
-        tournament = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.is_active, TOURNAMENT_GAMES.open_to)).filter(and_(TOURNAMENT_GAMES.id==team.tournament_game_id, TOURNAMENT_GAMES.tournament_id==team.tournament_id)).first()
+    def calculate_age(self, dob: datetime) -> int:
+        today = datetime.now()
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        return age
+    
+    def checker(self, team: Teams, user_id: str, team_id: str=None):
+        tournament = self.db.query(TOURNAMENT_GAMES).filter(and_(TOURNAMENT_GAMES.id==team.tournament_game_id, TOURNAMENT_GAMES.tournament_id==team.tournament_id)).first()
         if tournament is None:
             return GenericResponseModel(status='error', message='Invalid details provided', status_code=http.HTTPStatus.BAD_REQUEST)
 
         if tournament.is_active==False:
             return GenericResponseModel(status='error', message='Tournament Game is not active', status_code=http.HTTPStatus.BAD_REQUEST)
         
-        user = self.db.query(USERS).options(load_only(USERS.gender, USERS.verified)).filter(USERS.id==user_id).first()
+        user = self.db.query(USERS).options(load_only(USERS.gender, USERS.verified, USERS.dob)).filter(USERS.id==user_id).first()
         
-        if (tournament.open_to!=2 and tournament.open_to!=user.gender) or user.gender is None:
+        if (tournament.open_to!=2 and tournament.open_to!=user.gender) or user.gender is None or user.dob is None:
             return GenericResponseModel(status='error', message='Tournament Game is not for your gender or update profile', status_code=http.HTTPStatus.BAD_REQUEST)
 
         if user.verified==0 or user.verified==-1:
             return GenericResponseModel(status='error', message='User profile is not verified', status_code=http.HTTPStatus.BAD_REQUEST)
+
+        user_age = self.calculate_age(user.dob)
+
+        if (tournament.min_age is not None and user_age < tournament.min_age) or (tournament.max_age is not None and user_age > tournament.max_age):
+            return GenericResponseModel(status='error', message='User age does not meet the tournament requirements', status_code=http.HTTPStatus.BAD_REQUEST)
+
+        count1 = self.db.query(TEAMS).filter(and_(TEAMS.admin_id==user_id, TEAMS.tournament_id==team.tournament_id, TEAMS.tournament_game_id==team.tournament_game_id)).count()
+        if count1 != 0:
+            return GenericResponseModel(status='error', message='User already registered', status_code=http.HTTPStatus.BAD_REQUEST)
+        count2 = 0
+        if team_id is not None:
+            team_obj = self.db.query(TEAMS).filter(TEAMS.id == team_id).first()
+            if team_obj is None:
+                return GenericResponseModel(status='error', message='Invalid team id provided', status_code=http.HTTPStatus.BAD_REQUEST)
+            
+            count2 = self.db.query(TEAM_PLAYERS).filter(and_(TEAM_PLAYERS.team_id==team_id, TEAM_PLAYERS.player_id==user_id)).count()
+            if count2 != 0:
+                return GenericResponseModel(status='error', message='User already registered', status_code=http.HTTPStatus.BAD_REQUEST)
         
-        return None
+
+            team_size = tournament.team_size
+            team_filled = team_obj.no_of_boys+team_obj.no_of_girls
+            if  team_filled == team_size:
+                return GenericResponseModel(status='error', message='Team is already full', status_code=http.HTTPStatus.BAD_REQUEST)
+
+            min_boys = tournament.min_boys
+            min_girls = tournament.min_girls
+            
+            user_gender = user.gender
+            if user_gender == 1 and team_obj.no_of_girls<min_girls and min_girls+(team_filled-team_obj.no_of_girls)+1>team_size:
+                return GenericResponseModel(status='error', message='Maximum boys that can be added reached', status_code=http.HTTPStatus.BAD_REQUEST)
+            elif user_gender == 0 and team_obj.no_of_boys<min_boys and min_boys+(team_filled-team_obj.no_of_boys)+1>team_size:
+                return GenericResponseModel(status='error', message='Maximum girls that can be added reached', status_code=http.HTTPStatus.BAD_REQUEST)
+            else:
+                if user_gender == 1:
+                    team_obj.no_of_boys += 1
+                else:
+                    team_obj.no_of_girls += 1
+                self.db.add(team_obj)
+
+
+
+        
+        return True
+
 
     def create_team(self, team: Teams, user_id: str)->GenericResponseModel:
         checker_result = self.checker(team, user_id)
-        if checker_result is not None:
+        if checker_result is not True:
             return checker_result
-
-        if self.check_if_registered(user_id, team.tournament_id, team.tournament_game_id) == False:
-            return GenericResponseModel(status='error', message='User already registered for the game', status_code=http.HTTPStatus.BAD_REQUEST)
+        
+        print("\n\nReached after checker result if\n\n")
 
         team_obj = TEAMS(**team.dict())
         team_obj.id = shortuuid.uuid()[:16]
@@ -118,5 +160,16 @@ class TournamentService():
         
 
 
-    def join_team(self, tournament_id:str, tournament_game_id:str, team_id: str, user_id: str):
-        pass
+    def join_team(self, team: Teams, team_id: str, user_id: str):
+        # obj = {'tournament_id':tournament_id, 'tournament_game_id':tournament_game_id};
+
+        # return obj
+        checker_result = self.checker(team, user_id, team_id)
+        if checker_result is not True:
+            return checker_result
+        
+        team_player = TEAM_PLAYERS(team_id= team_id, player_id= user_id)
+        self.db.add(team_player)
+        self.db.commit()
+        return GenericResponseModel(status='success', message='Team player added successfully',  status_code=http.HTTPStatus.ACCEPTED)
+        

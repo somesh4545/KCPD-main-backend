@@ -81,17 +81,19 @@ class TOURNAMENT_GAMES(Base):
     tournament = relationship("TOURNAMENT")
     game_id = Column(Integer, ForeignKey('GAMES.id',ondelete="CASCADE"), nullable=False)
     game = relationship("GAMES")
-    participation_fees = Column(Integer, default=0)
-    prize_pool = Column(Integer, default=0)
-    max_teams = Column(Integer, default=8)
-    team_size = Column(Integer, default=1)
-    min_girls = Column(Integer)
-    min_boys= Column(Integer)
-    open_to  = Column(Integer, default=None)
+    participation_fees = Column(Integer, default=0, nullable=False)
+    prize_pool = Column(Integer, default=0,  nullable=False)
+    max_teams = Column(Integer, default=8,  nullable=False)
+    team_size = Column(Integer, default=1,  nullable=False)
+    min_girls = Column(Integer,  nullable=False)
+    min_boys= Column(Integer,  nullable=False)
+    # open to 1(boys) 0(girls) 2(mix ups)
+    open_to  = Column(Integer,  nullable=False)
     total_rounds = Column(Integer, default=3)
     qualification_method = Column(String(10), default="Single Elimintation")
     is_active = Column(Boolean, default=True)
-
+    min_age = Column(Integer, default=17, nullable=False)
+    max_age = Column(Integer, default=21, nullable=False)
 
 class TEAMS(Base):
     __tablename__ = "TEAMS"
@@ -104,6 +106,8 @@ class TEAMS(Base):
     tournament_game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id',ondelete="CASCADE"), nullable=False)
     tournament_game = relationship("TOURNAMENT_GAMES")
     verified = Column(Integer, default=0)
+    no_of_boys = Column(Integer, nullable=False)
+    no_of_girls = Column(Integer, nullable=False)
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
 
 class TEAM_PLAYERS(Base):
