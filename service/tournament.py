@@ -1,5 +1,5 @@
-from schemas.index import GenericResponseModel, Tournament, Tournament_Games, Teams, TeamPlayers
-from models.index import TOURNAMENT, USERS, TOURNAMENT_GAMES, TEAMS, TEAM_PLAYERS
+from schemas.index import GenericResponseModel, Tournament, Tournament_Games, Teams, TeamPlayers, Umpires, Grounds
+from models.index import TOURNAMENT, USERS, TOURNAMENT_GAMES, TEAMS, TEAM_PLAYERS, UMPIRES, GROUNDS
 from sqlalchemy.orm import Session, joinedload, load_only
 from sqlalchemy import and_
 import shortuuid
@@ -73,6 +73,24 @@ class TournamentService():
         self.db.add(t_g)
         self.db.commit()
         return GenericResponseModel(status='success', message='Tournament game details updated', status_code=http.HTTPStatus.ACCEPTED)
+
+
+    ## adding required grounds and umpries for particular game
+    def add_grounds_umpries(self, tournament_id: str, umpires: Umpires, grounds: Grounds, user_id: str) -> GenericResponseModel:
+        tournament = self.db.query(TOURNAMENT).filter(and_(TOURNAMENT.id == tournament_id, TOURNAMENT.organizer_id==user_id)).first()
+        if tournament is None:
+            return GenericResponseModel(status='error', message='Tournament or organizer not associated with tournament', status_code=http.HTTPStatus.BAD_REQUEST)
+
+        for up in umpires:
+            db_umpire = UMPIRES(**up.dict())
+            self.db.add(db_umpire)
+        for ground in grounds:
+            db_ground = GROUNDS(**ground.dict())
+            self.db.add(db_ground)
+        self.db.commit()
+        return GenericResponseModel(status='success', message='Game details added', status_code=http.HTTPStatus.ACCEPTED)
+
+        
 
 
     # to check if user already registerd for the given tournament game or not

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Response
 from models.index import ORGANIZERS, TOURNAMENT, TOURNAMENT_GAMES
-from schemas.index import Organizer, Tournament,GenericResponseModel, Tournament_Games
+from schemas.index import Organizer, Tournament,GenericResponseModel, Tournament_Games, Umpires, Grounds
 from sqlalchemy.orm import Session, load_only
 from fastapi import Depends
 from config.db import get_db
@@ -10,6 +10,7 @@ from sqlalchemy import and_, select
 from uuid import uuid4
 from service.tournament import TournamentService
 import http
+from typing import List
 
 # from fastapi_pagination import LimitOffsetPage, Page
 # from fastapi_pagination.ext.sqlalchemy import paginate
@@ -41,6 +42,12 @@ async def add_games_to_tournament(game: Tournament_Games,tournament_id: str,user
 @organizerRouter.patch('/tournament/{tournament_id}/games')
 async def update_game(game_id: str,user_id: str = Depends(get_current_user),game: dict={},  db: Session = Depends(get_db))->GenericResponseModel:
     return TournamentService(db).update_game(game, game_id, user_id)
+
+
+@organizerRouter.post('/tournament/{tournament_id}/games/{game_id}')
+async def add_grounds_umpries(umpires: List[Umpires], grounds: List[Grounds], tournament_id: str, game_id: str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db))->GenericResponseModel:
+    response = TournamentService(db).add_grounds_umpries(tournament_id, umpires, grounds, user_id)
+    return response
 
 
 @organizerRouter.get('/tournament/{tournament_id}/games/{tournament_game_id}/teams')

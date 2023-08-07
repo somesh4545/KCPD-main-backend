@@ -80,3 +80,12 @@ class Teams(BaseModel):
 class TeamPlayers(BaseModel):
     team_id: str
     player_id: str
+
+class Umpires(BaseModel):
+    user_id: str
+    game_id: str
+
+class Grounds(BaseModel):
+    name: str
+    game_id: str
+    location: Optional[str] = None

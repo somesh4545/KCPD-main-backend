@@ -119,4 +119,19 @@ class TEAM_PLAYERS(Base):
     player_id = Column(String(30), ForeignKey('USERS.id',ondelete="CASCADE"), nullable=False)
     player = relationship("USERS")
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
-    
+
+class UMPIRES(Base):
+    __tablename__ = 'UMPIRES'
+    id = Column(Integer,primary_key=True , index= True )
+    user_id =Column (String(30),ForeignKey('USERS.id'),nullable =False)
+    user =relationship("USERS")
+    game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id'))
+    game = relationship("TOURNAMENT_GAMES")
+
+class GROUNDS(Base):
+    __tablename__='GROUNDS'
+    id = Column(Integer,primary_key=True , index= True )
+    name = Column(String(100), nullable=False)
+    game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id'))
+    game = relationship("TOURNAMENT_GAMES")
+    location = Column(String(100), default=None)
