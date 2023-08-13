@@ -62,8 +62,8 @@ class TOURNAMENT(Base):
     about = Column(String(100), nullable=False)
     organizer_id = Column(String(30), ForeignKey("USERS.id", ondelete="CASCADE"), nullable=False)
     organizer = relationship("USERS")
-    start_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=False)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
     is_payment_done = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
 
@@ -79,7 +79,7 @@ class TOURNAMENT_GAMES(Base):
     info = Column(String(100), default=None)
     tournament_id = Column(String(30), ForeignKey('TOURNAMENT.id',ondelete="CASCADE"), nullable=False)
     tournament = relationship("TOURNAMENT")
-    game_id = Column(Integer, ForeignKey('GAMES.id',ondelete="CASCADE"), nullable=False)
+    game_id = Column(Integer, ForeignKey('GAMES.id'), nullable=False)
     game = relationship("GAMES")
     participation_fees = Column(Integer, default=0, nullable=False)
     prize_pool = Column(Integer, default=0,  nullable=False)
@@ -94,6 +94,7 @@ class TOURNAMENT_GAMES(Base):
     is_active = Column(Boolean, default=True)
     min_age = Column(Integer, default=17, nullable=False)
     max_age = Column(Integer, default=21, nullable=False)
+    avg_duration = Column(Integer, default=30)
 
 class TEAMS(Base):
     __tablename__ = "TEAMS"
@@ -132,6 +133,38 @@ class GROUNDS(Base):
     __tablename__='GROUNDS'
     id = Column(Integer,primary_key=True , index= True )
     name = Column(String(100), nullable=False)
+    # tournament game id
     game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id'))
     game = relationship("TOURNAMENT_GAMES")
     location = Column(String(100), default=None)
+
+
+class FIXTURES(Base):
+    __tablename__ ='FIXTURES'
+    id = Column(Integer,primary_key=True , index= True )
+    tournament_id = Column(String(30), ForeignKey('TOURNAMENT.id',ondelete="CASCADE"), nullable=False)
+    tournament = relationship("TOURNAMENT")
+    tournament_game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id',ondelete="CASCADE"), nullable=False)
+    tournament_game = relationship("TOURNAMENT_GAMES")
+    
+    game_id = Column(Integer, ForeignKey('GAMES.id'), nullable=False)
+    game = relationship("GAMES")
+
+    round_no= Column(Integer,default=1)
+
+    team_1_id = Column(String(30), ForeignKey("TEAMS.id"), nullable=True)
+    team_1 = relationship("TEAMS", foreign_keys=[team_1_id])
+    team_2_id = Column(String(30), ForeignKey("TEAMS.id"), nullable=True)
+    team_2 = relationship("TEAMS", foreign_keys=[team_2_id])
+
+    winner_id = Column(String(30), ForeignKey("TEAMS.id"), nullable=True)
+    winner = relationship("TEAMS", foreign_keys=[winner_id])
+
+    # start
+    ground_id = Column(Integer, ForeignKey("GROUNDS.id"), nullable=False)
+    ground = relationship("GROUNDS")
+    umpire_id = Column(String(30), ForeignKey("USERS.id"), nullable=False)
+    umpire = relationship("USERS")
+
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)

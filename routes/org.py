@@ -9,6 +9,7 @@ from uuid import uuid4
 from sqlalchemy import and_, select
 from uuid import uuid4
 from service.tournament import TournamentService
+from service.tournament_games import Tournament_Game_Service
 import http
 from typing import List
 
@@ -46,8 +47,55 @@ async def update_game(game_id: str,user_id: str = Depends(get_current_user),game
 
 @organizerRouter.post('/tournament/{tournament_id}/games/{game_id}')
 async def add_grounds_umpries(umpires: List[Umpires], grounds: List[Grounds], tournament_id: str, game_id: str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db))->GenericResponseModel:
-    response = TournamentService(db).add_grounds_umpries(tournament_id, umpires, grounds, user_id)
+    response = Tournament_Game_Service(db).add_grounds_umpries(tournament_id, umpires, grounds, user_id)
     return response
+
+
+@organizerRouter.patch('/tournament/{tournament_id}/games/{game_id}/ground/')
+async def update_ground(ground_id:int,user_id: str=Depends(get_current_user), ground: dict={},db: Session = Depends(get_db))->GenericResponseModel:
+    response = Tournament_Game_Service(db).update_ground_for_game(ground_id, ground, user_id)
+    return response
+
+
+@organizerRouter.delete('/tournament/{tournament_id}/games/{game_id}/ground/')
+async def delete_ground_for_game( tournament_id: str, game_id: str, ground_id:str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db))->GenericResponseModel:
+    response = Tournament_Game_Service(db).delete_ground_for_game(tournament_id, ground_id, user_id)
+    return response
+
+
+@organizerRouter.delete('/tournament/{tournament_id}/games/{game_id}/umpire/')
+async def delete_umpire_for_game( tournament_id: str, game_id: str, umpire_id:str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db))->GenericResponseModel:
+    response = Tournament_Game_Service(db).delete_umpire_for_game(tournament_id, umpire_id, user_id)
+    return response
+
+
+@organizerRouter.get('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/')
+async def get_fixtures(tournament_id:str, tournament_game_id: str, game_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).get_fixtures(tournament_id, tournament_game_id, game_id, user_id)
+
+
+
+@organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/')
+async def create_fixtures(tournament_id:str, tournament_game_id: str, game_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).create_fixtures(tournament_id, tournament_game_id, game_id, user_id)
+
+
+@organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/applyfixtures/')
+async def apply_fixtures(tournament_id:str, tournament_game_id: str,game_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).apply_fixtures(tournament_id, tournament_game_id, game_id, user_id)
+
+
+# define buy if any match needs to be given buy if opponent is not there
+@organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/{fixture_id}/give_buy')
+async def give_buy(tournament_id:str, tournament_game_id: str, fixture_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).give_buy(tournament_id, tournament_game_id, fixture_id, user_id)
+    
+
+# define match result declaration
+@organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/{fixture_id}/results')
+async def post_match_results(tournament_id:str, tournament_game_id: str, fixture_id:int, winner_id: str, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).post_match_results(tournament_id, tournament_game_id, fixture_id, winner_id, user_id)
+    
 
 
 @organizerRouter.get('/tournament/{tournament_id}/games/{tournament_game_id}/teams')

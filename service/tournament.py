@@ -75,24 +75,6 @@ class TournamentService():
         return GenericResponseModel(status='success', message='Tournament game details updated', status_code=http.HTTPStatus.ACCEPTED)
 
 
-    ## adding required grounds and umpries for particular game
-    def add_grounds_umpries(self, tournament_id: str, umpires: Umpires, grounds: Grounds, user_id: str) -> GenericResponseModel:
-        tournament = self.db.query(TOURNAMENT).filter(and_(TOURNAMENT.id == tournament_id, TOURNAMENT.organizer_id==user_id)).first()
-        if tournament is None:
-            return GenericResponseModel(status='error', message='Tournament or organizer not associated with tournament', status_code=http.HTTPStatus.BAD_REQUEST)
-
-        for up in umpires:
-            db_umpire = UMPIRES(**up.dict())
-            self.db.add(db_umpire)
-        for ground in grounds:
-            db_ground = GROUNDS(**ground.dict())
-            self.db.add(db_ground)
-        self.db.commit()
-        return GenericResponseModel(status='success', message='Game details added', status_code=http.HTTPStatus.ACCEPTED)
-
-        
-
-
     # to check if user already registerd for the given tournament game or not
     def check_if_registered(self, user_id: str, tournament_id: str, tournament_game_id: str, team_id: str=None): 
         return False
@@ -173,8 +155,7 @@ class TournamentService():
         self.db.add(team_player_obj)
         self.db.commit()
 
-        return GenericResponseModel(status='success', message='Team created successfully', data={'team_id': team_id}, status_code=http.HTTPStatus.ACCEPTED)
-        
+        return GenericResponseModel(status='success', message='Team created successfully', data={'team_id': team_id}, status_code=http.HTTPStatus.ACCEPTED)     
 
 
     def join_team(self, team: Teams, team_id: str, user_id: str):

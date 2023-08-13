@@ -26,8 +26,8 @@ class Tournament(BaseModel):
     name: str
     about: str
     organizer_id: str
-    start_date: datetime.date
-    end_date: datetime.date
+    start_date: datetime.datetime
+    end_date: datetime.datetime
     is_payment_done: bool = True
     is_active: bool = True
 
@@ -47,6 +47,7 @@ class Tournament_Games(BaseModel):
     qualification_method: str
     min_age: int
     max_age: int
+    avg_duration: int
 
 class Document(BaseModel):
     user_id: str
