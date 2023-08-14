@@ -10,8 +10,7 @@ from sqlalchemy import and_, select
 from uuid import uuid4
 from utils.general import model_to_dict
 import http
-from service.tournament import TournamentService
-
+from service.index import TournamentService
 
 #routes
 tournamentRouter = APIRouter()

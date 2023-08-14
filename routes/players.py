@@ -7,7 +7,7 @@ from config.db import get_db
 from utils.jwt import  get_current_user
 from uuid import uuid4
 from sqlalchemy import and_
-from service.tournament import TournamentService
+from service.index import TournamentService
 
 playersRouter = APIRouter()
 

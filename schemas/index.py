@@ -45,9 +45,16 @@ class Tournament_Games(BaseModel):
     open_to: int
     total_rounds: int
     type: int
+    # if type is 2 i.e league or gourp tournament
+    num_groups: int = None
+    teams_per_group: int = None
+    # if type 2 ends
     min_age: int
     max_age: int
     avg_duration: int
+    start_date: datetime.datetime
+    end_date: datetime.datetime
+    
 
 class Document(BaseModel):
     user_id: str

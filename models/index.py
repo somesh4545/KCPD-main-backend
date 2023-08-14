@@ -92,10 +92,17 @@ class TOURNAMENT_GAMES(Base):
     total_rounds = Column(Integer, default=3)
     #type denotes the tournament type like 1-single elimination
     type = Column(Integer, default=1)
+    # if type 2 then this fields matter
+    num_groups = Column(Integer, default=None)
+    teams_per_group = Column(Integer, default=None)
+    # if type 2 ends
     is_active = Column(Boolean, default=True)
     min_age = Column(Integer, default=17, nullable=False)
     max_age = Column(Integer, default=21, nullable=False)
     avg_duration = Column(Integer, default=30)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+
 
 class TEAMS(Base):
     __tablename__ = "TEAMS"
@@ -111,6 +118,12 @@ class TEAMS(Base):
     verified = Column(Integer, default=0)
     no_of_boys = Column(Integer, nullable=False)
     no_of_girls = Column(Integer, nullable=False)
+    # if tournament was type 2 that is league one
+    # then 
+    group = Column(Integer, nullable=None)
+    points = Column(Integer, nullable=None)
+    nr = Column(Integer, nullable=None)
+    # ends
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
 
 class TEAM_PLAYERS(Base):
@@ -143,6 +156,7 @@ class GROUNDS(Base):
 class FIXTURES(Base):
     __tablename__ ='FIXTURES'
     id = Column(Integer,primary_key=True , index= True )
+    match_number = Column(Integer)
     tournament_id = Column(String(30), ForeignKey('TOURNAMENT.id',ondelete="CASCADE"), nullable=False)
     tournament = relationship("TOURNAMENT")
     tournament_game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id',ondelete="CASCADE"), nullable=False)
@@ -160,7 +174,8 @@ class FIXTURES(Base):
 
     winner_id = Column(String(30), ForeignKey("TEAMS.id"), nullable=True)
     winner = relationship("TEAMS", foreign_keys=[winner_id])
-
+    # if type of tournaemnt was 2 then round 1 needs to have fixture of group
+    group = Column(Integer, default=None)
     # start
     ground_id = Column(Integer, ForeignKey("GROUNDS.id"), nullable=False)
     ground = relationship("GROUNDS")

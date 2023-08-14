@@ -54,9 +54,9 @@ class Fixtures_Serivce_Single_Elimination():
         match_number = 0
         day = 0
 
-        print(grounds_schedule)
-        print(umpires_schedule)
-        print(start_time)
+        # print(grounds_schedule)
+        # print(umpires_schedule)
+        # print(start_time)
 
         for total in no_of_rounds:
             round_no += 1
@@ -102,6 +102,7 @@ class Fixtures_Serivce_Single_Elimination():
                 umpires_schedule[umpire_available] = current_time +  match_duration
                 
                 obj = {
+                    'match_number': match_number,
                     'tournament_id':tournament_id,
                     'tournament_game_id': tournament_game_id,
                     'game_id': game_id,
@@ -123,12 +124,7 @@ class Fixtures_Serivce_Single_Elimination():
 
     
     def create_fixtures(self, tournament_id: str, tournament_game_id: str,game_id:int, user_id: str):
-    
-        t_obj = self.db.query(TOURNAMENT).options(load_only(TOURNAMENT.start_date, TOURNAMENT.end_date)).filter(and_(TOURNAMENT.id==tournament_id, TOURNAMENT.organizer_id==user_id)).first()
-        if t_obj is None:
-            return GenericResponseModel(status='error', message="No tournament found or accessing other tournament", status_code=http.HTTPStatus.NOT_FOUND)
-        
-        g_obj = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.avg_duration, TOURNAMENT_GAMES.max_teams)).filter(and_(TOURNAMENT_GAMES.id==tournament_game_id)).first()
+        g_obj = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.avg_duration, TOURNAMENT_GAMES.max_teams, TOURNAMENT_GAMES.start_date, TOURNAMENT_GAMES.end_date)).filter(and_(TOURNAMENT_GAMES.id==tournament_game_id)).first()
         if g_obj is None:
             return GenericResponseModel(status='error', message="Game details not found", status_code=http.HTTPStatus.NOT_FOUND)
         
@@ -136,8 +132,7 @@ class Fixtures_Serivce_Single_Elimination():
         check_if_fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id)).count()
         if check_if_fixtures>0:
             return GenericResponseModel(status='error', message="Fixtures already created", status_code=http.HTTPStatus.BAD_REQUEST)
-
-
+        
 
         grounds = self.db.query(GROUNDS).filter(and_(GROUNDS.game_id==tournament_game_id)).all()
         umpires = self.db.query(UMPIRES).filter(UMPIRES.game_id==tournament_game_id).all()
@@ -149,7 +144,7 @@ class Fixtures_Serivce_Single_Elimination():
         grounds = [model_to_dict(g) for g in grounds]
         umpires = [model_to_dict(g) for g in umpires]
 
-        matches = self.schedule_matches(tournament_id, tournament_game_id,game_id, g_obj.max_teams, umpires, grounds, t_obj.start_date, t_obj.end_date, g_obj.avg_duration)
+        matches = self.schedule_matches(tournament_id, tournament_game_id,game_id, g_obj.max_teams, umpires, grounds, g_obj.start_date, g_obj.end_date, g_obj.avg_duration)
         fixtures_list = []
         for match in matches:
             fixtures_list.append(match)
@@ -158,3 +153,22 @@ class Fixtures_Serivce_Single_Elimination():
         self.db.commit()
         return GenericResponseModel(status='success', message="Fixtures", data=fixtures_list, status_code=http.HTTPStatus.ACCEPTED)
 
+
+
+    def apply_fixtures(self, tournament_id: str, tournament_game_id: str):
+        teams = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id == tournament_id, TEAMS.tournament_game_id==tournament_game_id, TEAMS.verified==1)).all()
+        if len(teams)==0:
+            return GenericResponseModel(status='error', message="No team found", status_code=http.HTTPStatus.BAD_REQUEST)
+        fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id)).all()
+        if len(fixtures)==0:
+            return GenericResponseModel(status='error', message="Fixtures not created", status_code=http.HTTPStatus.BAD_REQUEST)
+        
+        random.shuffle(teams)
+
+        for i, fixture in enumerate(fixtures):
+            if i*2 < len(teams):
+                fixture.team_1_id = teams[i*2].id
+            if i*2+1 < len(teams):
+                fixture.team_2_id = teams[i*2+1].id
+        self.db.commit()
+        return GenericResponseModel(status='success', message="Fixtures", status_code=http.HTTPStatus.ACCEPTED)

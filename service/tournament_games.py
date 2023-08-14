@@ -2,11 +2,11 @@ from schemas.index import GenericResponseModel, Tournament, Tournament_Games, Te
 from models.index import TOURNAMENT, USERS, TOURNAMENT_GAMES, TEAMS, TEAM_PLAYERS, UMPIRES, GROUNDS, FIXTURES
 from sqlalchemy.orm import Session, joinedload, load_only
 from sqlalchemy import and_
-from utils.general import model_to_dict
+from utils.general import model_to_dict, enhanced_model_to_dict
 import random
 import http
 from datetime import datetime
-from service.fixtures_single_elimination import Fixtures_Serivce_Single_Elimination
+from service.index import Fixtures_Serivce_Single_Elimination, Fixtures_Service_League
 
 class Tournament_Game_Service():
 
@@ -62,6 +62,7 @@ class Tournament_Game_Service():
         else:
             return GenericResponseModel(status='error', message='Already deleted or incorrect details', status_code=http.HTTPStatus.BAD_REQUEST)
         
+
     # delete a umpire from certain game
     def delete_umpire_for_game(self, tournament_id: str, umpire_id: int, user_id: str):
         if self.validation(tournament_id, user_id)==False:
@@ -74,41 +75,39 @@ class Tournament_Game_Service():
         else:
             return GenericResponseModel(status='error', message='Already deleted or incorrect details', status_code=http.HTTPStatus.BAD_REQUEST)
         
+
    
     def get_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, user_id: str):
-        fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id)).all()
+        fixtures = self.db.query(FIXTURES).options(
+            joinedload(FIXTURES.team_1).load_only(TEAMS.name),
+            joinedload(FIXTURES.team_2).load_only(TEAMS.name),
+            joinedload(FIXTURES.winner).load_only(TEAMS.name),
+            joinedload(FIXTURES.ground).load_only(GROUNDS.name, GROUNDS.location),
+            joinedload(FIXTURES.umpire).load_only(USERS.first_name),
+        ).where(and_(FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id)).all()
         if fixtures is None or len(fixtures)==0:
             return GenericResponseModel(status='error', message="Fixtures not created or found", status_code=http.HTTPStatus.BAD_REQUEST)
         
-        fixtures_list = [model_to_dict(f) for f in fixtures]
-        return GenericResponseModel(status='success', data=fixtures_list, message="Fixtures", status_code=http.HTTPStatus.OK)
-        
+        # return fixtures
+        return {'status': 'success', 'message': "Fixtures found", 'status_code': http.HTTPStatus.OK, 'data': fixtures}
 
 
     # def create_fixtures(self, tournament_id: str, tournament_game_id: str, user_id: str)
     def create_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, tournament_type: int, user_id: str):
         if tournament_type ==1:
             return Fixtures_Serivce_Single_Elimination(self.db).create_fixtures(tournament_id, tournament_game_id, game_id, user_id)
-    
+        if tournament_type == 2:
+            return Fixtures_Service_League(self.db).create_fixtures(tournament_id, tournament_game_id, game_id, user_id)
 
-    def apply_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, user_id: str):
-        teams = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id == tournament_id, TEAMS.tournament_game_id==tournament_game_id, TEAMS.verified==1)).all()
-        if len(teams)==0:
-            return GenericResponseModel(status='error', message="No team found", status_code=http.HTTPStatus.BAD_REQUEST)
-        fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id)).all()
-        if len(fixtures)==0:
-            return GenericResponseModel(status='error', message="Fixtures not created", status_code=http.HTTPStatus.BAD_REQUEST)
+        return GenericResponseModel(status='error', message="Mention tournament type", status_code=http.HTTPStatus.BAD_REQUEST)
+
+
+    def apply_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, tournament_type: int, user_id: str):
+        if tournament_type ==1:
+            return Fixtures_Serivce_Single_Elimination(self.db).apply_fixtures(tournament_id, tournament_game_id)
+        if tournament_type == 2:
+            return Fixtures_Service_League(self.db).apply_fixtures(tournament_id, tournament_game_id)
         
-        random.shuffle(teams)
-
-        for i, fixture in enumerate(fixtures):
-            if i*2 < len(teams):
-                fixture.team_1_id = teams[i*2].id
-            if i*2+1 < len(teams):
-                fixture.team_2_id = teams[i*2+1].id
-        self.db.commit()
-        return GenericResponseModel(status='success', message="Fixtures", status_code=http.HTTPStatus.ACCEPTED)
-
         
 
     # helper function to check if all matches of that round are over. if over start creating fixtures of next round

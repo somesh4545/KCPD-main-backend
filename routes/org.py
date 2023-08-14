@@ -46,7 +46,10 @@ async def update_game(game_id: str,user_id: str = Depends(get_current_user),game
 
 
 @organizerRouter.post('/tournament/{tournament_id}/games/{game_id}')
-async def add_grounds_umpries(umpires: List[Umpires], grounds: List[Grounds], tournament_id: str, game_id: str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db))->GenericResponseModel:
+async def add_grounds_umpries(umpires: List[Umpires], grounds: List[Grounds], tournament_id: str, game_id: str , user_id: str=Depends(get_current_user), db: Session = Depends(get_db))->GenericResponseModel:
+    """
+    game_id: The tournament game id 
+    """
     response = Tournament_Game_Service(db).add_grounds_umpries(tournament_id, umpires, grounds, user_id)
     return response
 
@@ -81,8 +84,8 @@ async def create_fixtures(tournament_id:str, tournament_game_id: str, game_id:in
 
 
 @organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/applyfixtures/')
-async def apply_fixtures(tournament_id:str, tournament_game_id: str,game_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
-    return Tournament_Game_Service(db).apply_fixtures(tournament_id, tournament_game_id, game_id, user_id)
+async def apply_fixtures(tournament_id:str, tournament_game_id: str,game_id:int, tournament_type:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).apply_fixtures(tournament_id, tournament_game_id, game_id, tournament_type, user_id)
 
 
 # define buy if any match needs to be given buy if opponent is not there
