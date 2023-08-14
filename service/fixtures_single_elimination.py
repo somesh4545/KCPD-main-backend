@@ -159,7 +159,7 @@ class Fixtures_Serivce_Single_Elimination():
         teams = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id == tournament_id, TEAMS.tournament_game_id==tournament_game_id, TEAMS.verified==1)).all()
         if len(teams)==0:
             return GenericResponseModel(status='error', message="No team found", status_code=http.HTTPStatus.BAD_REQUEST)
-        fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id)).all()
+        fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id, FIXTURES.round_no==1)).all()
         if len(fixtures)==0:
             return GenericResponseModel(status='error', message="Fixtures not created", status_code=http.HTTPStatus.BAD_REQUEST)
         

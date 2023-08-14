@@ -9,6 +9,7 @@ from datetime import datetime
 import heapq
 import random
 from datetime import datetime, timedelta
+from operator import attrgetter
 import random
 
 class Fixtures_Service_League():
@@ -170,4 +171,46 @@ class Fixtures_Service_League():
     
 
     def apply_fixtures(self, tournament_id: str, tournament_game_id: str):
-        pass
+        teams = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id)).all()
+        if len(teams)==0:
+            return GenericResponseModel(status='error', message="No team found", status_code=http.HTTPStatus.BAD_REQUEST)
+        fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id, FIXTURES.round_no==1)).all()
+        if len(fixtures)==0:
+            return GenericResponseModel(status='error', message="Fixtures not created", status_code=http.HTTPStatus.BAD_REQUEST)
+        
+        t_g_obj = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.num_groups, TOURNAMENT_GAMES.teams_per_group)).filter(TOURNAMENT_GAMES.id==tournament_game_id).first()
+        if t_g_obj is None:
+            return GenericResponseModel(status='error', message="Invalid details passed", status_code=http.HTTPStatus.BAD_REQUEST)
+
+        random.shuffle(teams)
+        teams = teams[:min(len(teams), t_g_obj.num_groups*t_g_obj.teams_per_group)]
+        i = 0
+        while i < len(teams):
+            teams[i].group = (i%t_g_obj.num_groups)+1
+            i = i+1
+
+        teams = sorted(teams,  key=attrgetter('group'))
+        fixtures = sorted(fixtures, key=attrgetter('group')) 
+        groups = [[] for _ in range(t_g_obj.num_groups)]
+        for i, team in enumerate(teams):
+            groups[team.group-1].append(team)
+
+        # Create round robin schedule within groups
+        round_robin_matches = []
+        for group in groups:
+            for i in range(len(group)):
+                for j in range(i + 1, len(group)):
+                    round_robin_matches.append((group[i], group[j]))
+
+        # Assign the round robin matches to the fixtures
+        for i, fixture in enumerate(fixtures):
+            team_1, team_2 = round_robin_matches[i % len(round_robin_matches)]
+            fixture.team_1_id = team_1.id
+            fixture.team_2_id = team_2.id
+
+        # Now you can commit the changes to the database
+        self.db.commit()
+
+        # return fixtures
+        return GenericResponseModel(status='success', message="Fixtures applied pull to refresh", status_code=http.HTTPStatus.ACCEPTED)
+        
