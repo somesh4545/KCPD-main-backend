@@ -90,7 +90,8 @@ class TOURNAMENT_GAMES(Base):
     # open to 1(boys) 0(girls) 2(mix ups)
     open_to  = Column(Integer,  nullable=False)
     total_rounds = Column(Integer, default=3)
-    qualification_method = Column(String(10), default="Single Elimintation")
+    #type denotes the tournament type like 1-single elimination
+    type = Column(Integer, default=1)
     is_active = Column(Boolean, default=True)
     min_age = Column(Integer, default=17, nullable=False)
     max_age = Column(Integer, default=21, nullable=False)

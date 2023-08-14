@@ -44,7 +44,7 @@ class Tournament_Games(BaseModel):
     min_boys: int
     open_to: int
     total_rounds: int
-    qualification_method: str
+    type: int
     min_age: int
     max_age: int
     avg_duration: int

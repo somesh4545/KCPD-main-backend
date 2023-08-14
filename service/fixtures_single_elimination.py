@@ -123,19 +123,7 @@ class Fixtures_Serivce_Single_Elimination():
 
     
     def create_fixtures(self, tournament_id: str, tournament_game_id: str,game_id:int, user_id: str):
-        
-        match_duration = 30
-        # Example usage
-        num_teams = 16
-        # start_time = datetime(year=2023, month=8, day=1, hour=9, minute=0)  # Start time (e.g., August 1, 2023, 9:00 AM)
-        # end_time = datetime(year=2023, month=8, day=1, hour=17, minute=0)  # End time (e.g., August 1, 2023, 5:00 PM)
-        start_date = datetime(2023, 8, 9, 9) # Start time in minutes (e.g., 9:00 AM)
-        end_date = datetime(2023, 8, 10, 17) # Start time in minutes (e.g., 9:00 AM)
-        
-
-        # umpires = [{'id': 1, 'name': 'xyt'}, {'id': 2, 'name': 'ytx'}, {'id': 3, 'name': 'mxz'}, {'id': 4, 'name': 'abc'}]
-        # grounds = [{'id': 1, 'name': 'g1'},  {'id': 2, 'name': 'g2'}, {'id': 3, 'name': 'g3'}, {'id': 4, 'name': 'g4'}]
-
+    
         t_obj = self.db.query(TOURNAMENT).options(load_only(TOURNAMENT.start_date, TOURNAMENT.end_date)).filter(and_(TOURNAMENT.id==tournament_id, TOURNAMENT.organizer_id==user_id)).first()
         if t_obj is None:
             return GenericResponseModel(status='error', message="No tournament found or accessing other tournament", status_code=http.HTTPStatus.NOT_FOUND)

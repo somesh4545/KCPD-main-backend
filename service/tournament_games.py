@@ -86,8 +86,9 @@ class Tournament_Game_Service():
 
 
     # def create_fixtures(self, tournament_id: str, tournament_game_id: str, user_id: str)
-    def create_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, user_id: str):
-        return Fixtures_Serivce_Single_Elimination(self.db).create_fixtures(tournament_id, tournament_game_id, game_id, user_id)
+    def create_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, tournament_type: int, user_id: str):
+        if tournament_type ==1:
+            return Fixtures_Serivce_Single_Elimination(self.db).create_fixtures(tournament_id, tournament_game_id, game_id, user_id)
     
 
     def apply_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, user_id: str):
@@ -118,9 +119,6 @@ class Tournament_Game_Service():
         for fixture in fixtures:
             if fixture.winner_id != None:
                 winners.append(fixture.winner_id)
-        print("\n\n")
-        print(winners)
-        print("\n\n")
         if len(winners) == total:
             next_fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_game_id==tournament_game_id, FIXTURES.round_no==round_no+1)).all()
             if len(next_fixtures)>0:
