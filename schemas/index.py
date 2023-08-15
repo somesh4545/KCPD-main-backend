@@ -97,3 +97,8 @@ class Grounds(BaseModel):
     name: str
     game_id: str
     location: Optional[str] = None
+
+class Winners(BaseModel):
+    winner_id: str
+    points: int
+    nr: int

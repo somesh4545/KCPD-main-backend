@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Response
 from models.index import ORGANIZERS, TOURNAMENT, TOURNAMENT_GAMES
-from schemas.index import Organizer, Tournament,GenericResponseModel, Tournament_Games, Umpires, Grounds
+from schemas.index import Organizer, Tournament,GenericResponseModel, Tournament_Games, Umpires, Grounds, Winners
 from sqlalchemy.orm import Session, load_only
 from fastapi import Depends
 from config.db import get_db
@@ -96,14 +96,15 @@ async def give_buy(tournament_id:str, tournament_game_id: str, fixture_id:int, u
 
 # define match result declaration
 @organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/{fixture_id}/results')
-async def post_match_results(tournament_id:str, tournament_game_id: str, fixture_id:int, winner_id: str, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
-    return Tournament_Game_Service(db).post_match_results(tournament_id, tournament_game_id, fixture_id, winner_id, user_id)
+async def post_match_results(tournament_id: str, tournament_game_id: str, fixture_id:int, winner: Winners, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).post_match_results(tournament_game_id, fixture_id, winner )
     
 
 
 @organizerRouter.get('/tournament/{tournament_id}/games/{tournament_game_id}/teams')
 async def get_registered_teams(tournament_id: str, tournament_game_id: str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db))->GenericResponseModel:
     return TournamentService(db).get_registered_teams(tournament_id, tournament_game_id)
+
 
 
 ## route for approving teams registered for the particular tournament and all

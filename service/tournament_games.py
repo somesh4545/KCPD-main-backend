@@ -1,7 +1,7 @@
-from schemas.index import GenericResponseModel, Tournament, Tournament_Games, Teams, TeamPlayers, Umpires, Grounds
+from schemas.index import GenericResponseModel, Umpires, Grounds, Winners
 from models.index import TOURNAMENT, USERS, TOURNAMENT_GAMES, TEAMS, TEAM_PLAYERS, UMPIRES, GROUNDS, FIXTURES
 from sqlalchemy.orm import Session, joinedload, load_only
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from utils.general import model_to_dict, enhanced_model_to_dict
 import random
 import http
@@ -92,6 +92,20 @@ class Tournament_Game_Service():
         return {'status': 'success', 'message': "Fixtures found", 'status_code': http.HTTPStatus.OK, 'data': fixtures}
 
 
+    def get_fixture_by_id(self, fixture_id: int, user_id: str):
+        fixture = self.db.query(FIXTURES).options(
+            joinedload(FIXTURES.team_1).load_only(TEAMS.name),
+            joinedload(FIXTURES.team_2).load_only(TEAMS.name),
+            joinedload(FIXTURES.winner).load_only(TEAMS.name),
+            joinedload(FIXTURES.ground).load_only(GROUNDS.name, GROUNDS.location),
+            joinedload(FIXTURES.umpire).load_only(USERS.first_name),
+        ).where(and_(FIXTURES.id == fixture_id)).first()
+        if fixture is None :
+            return GenericResponseModel(status='error', message="Fixture not found", status_code=http.HTTPStatus.BAD_REQUEST)
+        return {'status': 'success', 'message': "Fixture found", 'status_code': http.HTTPStatus.OK, 'data': fixture}
+        
+
+
     # def create_fixtures(self, tournament_id: str, tournament_game_id: str, user_id: str)
     def create_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, tournament_type: int, user_id: str):
         if tournament_type ==1:
@@ -111,7 +125,7 @@ class Tournament_Game_Service():
         
 
     # helper function to check if all matches of that round are over. if over start creating fixtures of next round
-    def check_and_declare_next_round(self, tournament_id:str, tournament_game_id:str, round_no: int):
+    def check_s_and_declare_next_round(self, tournament_game_id:str, round_no: int):
         fixtures = self.db.query(FIXTURES).options(load_only(FIXTURES.winner_id)).filter(and_(FIXTURES.tournament_game_id==tournament_game_id, FIXTURES.round_no==round_no)).all()
         total = len(fixtures)
         winners = []
@@ -128,6 +142,37 @@ class Tournament_Game_Service():
                         fixture.team_2_id = winners[i*2+1]
                 self.db.commit()
 
+    
+    def check_l_and_declare_next_round(self, tournament_game_id:str, round_no: int):
+        pass
+        fixtures = self.db.query(FIXTURES).options(load_only(FIXTURES.winner_id)).filter(and_(FIXTURES.tournament_game_id==tournament_game_id, FIXTURES.round_no==round_no)).all()
+        total = len(fixtures)
+        winners = []
+        for fixture in fixtures:
+            if fixture.winner_id != None:
+                winners.append(fixture.winner_id)
+
+        top_teams = (
+            self.db.query(TEAMS)
+            .options(load_only(TEAMS.id))
+            .filter(and_(TEAMS.tournament_game_id==tournament_game_id, TEAMS.verified==1))
+            .order_by(TEAMS.group, func.coalesce(TEAMS.points, 0).desc(), func.coalesce(TEAMS.nr, 0).asc())
+            .group_by(TEAMS.group, TEAMS.id)
+            .having(func.row_number().over(partition_by=TEAMS.group).between(1, 2))
+            .all()
+        )
+        if len(winners) == total:
+            next_fixtures = self.db.query(FIXTURES).filter(and_(FIXTURES.tournament_game_id==tournament_game_id, FIXTURES.round_no==round_no+1)).all()
+            if len(next_fixtures)>0:
+                for i, fixture in enumerate(next_fixtures):
+                    if i*2 < len(top_teams):
+                        fixture.team_1_id = top_teams[i*2]
+                    if i*2+1 < len(top_teams):
+                        fixture.team_2_id = top_teams[i*2+1]
+                # self.db.commit()
+            print(next_fixtures)
+            print("\n\n\n")
+
 
     def give_buy(self, tournament_id:str, tournament_game_id: str, fixture_id:int, user_id: str):
         fixture = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id)).first()
@@ -136,21 +181,33 @@ class Tournament_Game_Service():
 
         fixture.winner_id = fixture.team_1_id
         self.db.commit()
-        self.check_and_declare_next_round(tournament_id, tournament_game_id, fixture.round_no)
+        t = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.type)).filter(TOURNAMENT_GAMES.id==tournament_game_id).first()
+        if t.type == 1:
+            self.check_s_and_declare_next_round(tournament_game_id, fixture.round_no)
         return GenericResponseModel(status='success', message="Fixture winner successfully updated", status_code=http.HTTPStatus.ACCEPTED)
     
 
-    def post_match_results(self, tournament_id:str, tournament_game_id: str, fixture_id:int, winner_id: str, user_id: str):
-        fixture = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.tournament_id==tournament_id, FIXTURES.tournament_game_id==tournament_game_id)).first()
+    def post_match_results(self, tournament_game_id: str, fixture_id:int, winner: Winners):
+        fixture = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.tournament_game_id==tournament_game_id)).first()
         if fixture is None:
             return GenericResponseModel(status='error', message="Fixtures not found", status_code=http.HTTPStatus.BAD_REQUEST)
 
-        if fixture.team_1_id!=winner_id and fixture.team_2_id!=winner_id:
+        if fixture.team_1_id!=winner.winner_id and fixture.team_2_id!=winner.winner_id:
             return GenericResponseModel(status='error', message="Invalid winner declared", status_code=http.HTTPStatus.BAD_REQUEST)
 
+        fixture.winner_id = winner.winner_id
 
-        fixture.winner_id = winner_id
+        #updating the team points and net run rate if any
+        team = self.db.query(TEAMS).filter(TEAMS.id==winner.winner_id).first()
+        team.points = (0 if team.points==None else team.points) + winner.points
+        team.nr = (0 if team.nr==None else team.nr) + winner.nr
         self.db.commit()
-        self.check_and_declare_next_round(tournament_id, tournament_game_id, fixture.round_no)
+
+        t = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.type)).filter(TOURNAMENT_GAMES.id==tournament_game_id).first()
+        if t.type == 1:
+            self.check_s_and_declare_next_round(tournament_game_id, fixture.round_no)
+        if t.type == 2:
+            self.check_l_and_declare_next_round(tournament_game_id, fixture.round_no)
+        
         return GenericResponseModel(status='success', message="Fixture winner successfully updated", status_code=http.HTTPStatus.ACCEPTED)
     

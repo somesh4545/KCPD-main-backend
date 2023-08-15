@@ -124,13 +124,14 @@ class TEAMS(Base):
     points = Column(Integer, nullable=None)
     nr = Column(Integer, nullable=None)
     # ends
+    team_players = relationship("TEAM_PLAYERS", back_populates="team")
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
 
 class TEAM_PLAYERS(Base):
     __tablename__ = "TEAM_PLAYERS"
     id = Column(Integer, primary_key=True,index=True)  
     team_id = Column(String(30), ForeignKey('TEAMS.id',ondelete="CASCADE"), nullable=False)
-    team = relationship("TEAMS")
+    team = relationship("TEAMS",  back_populates="team_players")
     player_id = Column(String(30), ForeignKey('USERS.id',ondelete="CASCADE"), nullable=False)
     player = relationship("USERS")
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)

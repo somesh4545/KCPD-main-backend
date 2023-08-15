@@ -140,7 +140,6 @@ class Fixtures_Serivce_Single_Elimination():
         if len(grounds)==0 or len(umpires)==0:
             return GenericResponseModel(status='error', message="Insufficient umpires or grounds", status_code=http.HTTPStatus.CONFLICT)
 
-
         grounds = [model_to_dict(g) for g in grounds]
         umpires = [model_to_dict(g) for g in umpires]
 
