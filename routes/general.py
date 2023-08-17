@@ -14,15 +14,8 @@ from utils.general import model_to_dict
 
 generalRouter = APIRouter()
 
-@generalRouter.get('/fixture/{fixture_id}')
-async def get_fixture_by_id(fixture_id:int,user_id: str=Depends(get_current_user), db: Session = Depends(get_db)):
-    return Tournament_Game_Service(db).get_fixture_by_id(fixture_id, user_id)
-
 @generalRouter.get('/get_all_games')
 async def get_all_games(db: Session = Depends(get_db)):
-    pass
     games = db.query(GAMES).all()
-
     result = [{'id': g.id, 'text': g.name, 'value': g.name} for g in games]
-
     return result

@@ -184,6 +184,29 @@ class FIXTURES(Base):
     ground = relationship("GROUNDS")
     umpire_id = Column(String(30), ForeignKey("USERS.id"), nullable=False)
     umpire = relationship("USERS")
-
+    
     start_time = Column(DateTime)
     end_time = Column(DateTime)
+
+
+
+# Games 
+# type 1 : volleyball, tt, badminton (working)
+# type 2 : football
+# type 3 : cricket
+
+class VTB(Base):
+    """
+    game class for volleyball tt badminton 
+    """
+    __tablename__ ="VTB"
+    id = Column(Integer, primary_key=True)
+    team_id =  Column(String(30), ForeignKey("TEAMS.id"), nullable=False)
+    team = relationship("TEAMS")
+    scored_by = Column(String(30), ForeignKey("USERS.id"), nullable=False)
+    scorer = relationship("USERS")
+    points = Column(Integer, nullable=False)
+    fixture_id = Column(Integer, ForeignKey("FIXTURES.id"))
+    fixture = relationship("FIXTURES")
+    created_at = Column(DateTime, default=datetime.datetime.now)
+

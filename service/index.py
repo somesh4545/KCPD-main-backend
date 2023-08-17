@@ -2,3 +2,4 @@ from service.fixtures_league import Fixtures_Service_League
 from service.fixtures_single_elimination import Fixtures_Serivce_Single_Elimination
 from service.tournament import TournamentService
 from service.tournament_games import Tournament_Game_Service
+from service.VTB import VTB_Serivce

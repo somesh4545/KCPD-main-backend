@@ -107,3 +107,10 @@ class Losers(BaseModel):
     loser_id: str
     points: int
     nr: float
+
+
+class Vtb(BaseModel):
+    team_id: str
+    scored_by: str
+    points: int
+    fixture_id: int
