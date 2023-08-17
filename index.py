@@ -14,11 +14,11 @@ app = FastAPI()
 def backend_testing():
     return {'msg', 'backend is running'}
 
-app.include_router(userRouter, prefix="/users")
-app.include_router(playersRouter, prefix='/players')
-app.include_router(organizerRouter, prefix='/organizer')
-app.include_router(tournamentRouter, prefix='/tournaments')
-app.include_router(generalRouter, prefix='/general')
-app.include_router(fixturesRouter, prefix='/fixtures')
+app.include_router(userRouter, prefix="/users", tags=["Users"])
+app.include_router(playersRouter, prefix='/players', tags=["Players"])
+app.include_router(organizerRouter, prefix='/organizer', tags=["Organizer"])
+app.include_router(tournamentRouter, prefix='/tournaments', tags=["Tournament"])
+app.include_router(generalRouter, prefix='/general', tags=["General"])
+app.include_router(fixturesRouter, prefix='/fixtures', tags=["Fixtures"])
 
-app.include_router(adminRouter, prefix='/admin')
+app.include_router(adminRouter, prefix='/admin', tags=["Admin"])
