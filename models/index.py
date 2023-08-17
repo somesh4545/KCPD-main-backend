@@ -102,6 +102,8 @@ class TOURNAMENT_GAMES(Base):
     avg_duration = Column(Integer, default=30)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
+    umpires = relationship("UMPIRES", back_populates="game")
+    grounds = relationship("GROUNDS", back_populates="game")
 
 
 class TEAMS(Base):
@@ -142,7 +144,7 @@ class UMPIRES(Base):
     user_id =Column (String(30),ForeignKey('USERS.id'),nullable =False)
     user =relationship("USERS")
     game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id'))
-    game = relationship("TOURNAMENT_GAMES")
+    game = relationship("TOURNAMENT_GAMES", back_populates="umpires")
 
 class GROUNDS(Base):
     __tablename__='GROUNDS'
@@ -150,7 +152,7 @@ class GROUNDS(Base):
     name = Column(String(100), nullable=False)
     # tournament game id
     game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id'))
-    game = relationship("TOURNAMENT_GAMES")
+    game = relationship("TOURNAMENT_GAMES", back_populates="grounds")
     location = Column(String(100), default=None)
 
 

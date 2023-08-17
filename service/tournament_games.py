@@ -271,3 +271,17 @@ class Tournament_Game_Service():
                 return GenericResponseModel(status='error', message="Invalid details passed", status_code=http.HTTPStatus.BAD_REQUEST)
 
             return {'status': 'success', 'message': "Team standings", 'data': teams, 'status_code': http.HTTPStatus.OK}
+        
+
+
+
+    def get_tournamenet_game_details(self, tournament_id:str, tournament_game_id: str, user_id: str):
+        details = self.db.query(TOURNAMENT_GAMES).options(
+            joinedload(TOURNAMENT_GAMES.grounds).load_only(GROUNDS.name, GROUNDS.location),
+            joinedload(TOURNAMENT_GAMES.umpires).load_only(UMPIRES.id).joinedload(UMPIRES.user).load_only(USERS.first_name, USERS.last_name, USERS.profile_url)
+        ).filter(and_(TOURNAMENT_GAMES.id==tournament_game_id)).first()
+        if details is None:
+            return GenericResponseModel(status='error', message="Invalid details passed", status_code=http.HTTPStatus.BAD_REQUEST)
+        
+        return {'status': 'success', 'message': "Details", 'data': details, 'status_code': http.HTTPStatus.OK}
+        
