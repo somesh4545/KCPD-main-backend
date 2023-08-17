@@ -36,6 +36,11 @@ async def get_tournament_games(tournament_id: str,user_id: str = Depends(get_cur
     response = TournamentService(db).get_tournament_games(tournament_id, user_id)
     return response
 
-@tournamentRouter.get('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/')
-async def get_fixtures(tournament_id:str, tournament_game_id: str, game_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
-    return Tournament_Game_Service(db).get_fixtures(tournament_id, tournament_game_id, game_id, user_id)
+@tournamentRouter.get('/{tournament_id}/games/{tournament_game_id}/fixtures/')
+async def get_fixtures(tournament_id:str, tournament_game_id: str, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).get_fixtures(tournament_id, tournament_game_id, user_id)
+
+
+@tournamentRouter.get('/{tournament_id}/games/{tournament_game_id}/standings/')
+async def get_standings(tournament_id:str, tournament_game_id: str, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).get_standings(tournament_id, tournament_game_id, user_id)

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Response
 from models.index import ORGANIZERS, TOURNAMENT, TOURNAMENT_GAMES
-from schemas.index import Organizer, Tournament,GenericResponseModel, Tournament_Games, Umpires, Grounds, Winners
+from schemas.index import Organizer, Tournament,GenericResponseModel, Tournament_Games, Umpires, Grounds, Winners, Losers
 from sqlalchemy.orm import Session, load_only
 from fastapi import Depends
 from config.db import get_db
@@ -74,7 +74,7 @@ async def delete_umpire_for_game( tournament_id: str, game_id: str, umpire_id:st
 
 @organizerRouter.get('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/')
 async def get_fixtures(tournament_id:str, tournament_game_id: str, game_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
-    return Tournament_Game_Service(db).get_fixtures(tournament_id, tournament_game_id, game_id, user_id)
+    return Tournament_Game_Service(db).get_fixtures(tournament_id, tournament_game_id, user_id)
 
 
 # tournament_type - 1(single elimination) 2(playoffs just like ipl)
@@ -98,6 +98,11 @@ async def give_buy(tournament_id:str, tournament_game_id: str, fixture_id:int, u
 @organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/{fixture_id}/results')
 async def post_match_results(tournament_id: str, tournament_game_id: str, fixture_id:int, winner: Winners, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
     return Tournament_Game_Service(db).post_match_results(tournament_game_id, fixture_id, winner )
+    
+
+@organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/{fixture_id}/lost')
+async def update_losing_team_points(tournament_id: str, tournament_game_id: str, fixture_id:int, loser: Losers, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).update_losing_team_points(tournament_game_id, fixture_id, loser )
     
 
 

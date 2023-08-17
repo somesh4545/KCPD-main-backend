@@ -1,0 +1,8 @@
+routes
+get_fixtures (2) -removed game_id parameters
+new route update_team_losing_points
+
+dyanmic intitizaliation of fixtures for league is done 
+
+datatype
+teams - nr(float)

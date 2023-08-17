@@ -122,7 +122,7 @@ class TEAMS(Base):
     # then 
     group = Column(Integer, nullable=None)
     points = Column(Integer, nullable=None)
-    nr = Column(Integer, nullable=None)
+    nr = Column(Float, nullable=None)
     # ends
     team_players = relationship("TEAM_PLAYERS", back_populates="team")
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)

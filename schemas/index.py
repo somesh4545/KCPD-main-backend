@@ -101,4 +101,9 @@ class Grounds(BaseModel):
 class Winners(BaseModel):
     winner_id: str
     points: int
-    nr: int
+    nr: float
+
+class Losers(BaseModel):
+    loser_id: str
+    points: int
+    nr: float
