@@ -62,6 +62,8 @@ class TOURNAMENT(Base):
     about = Column(String(100), nullable=False)
     organizer_id = Column(String(30), ForeignKey("USERS.id", ondelete="CASCADE"), nullable=False)
     organizer = relationship("USERS")
+    organizer_name = Column(String(100), nullable=False)
+    organizer_info = Column(String(150), nullable=False)
     start_date = Column(DateTime, nullable=False)
     end_date = Column(DateTime, nullable=False)
     is_payment_done = Column(Boolean, default=True)

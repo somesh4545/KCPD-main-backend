@@ -35,7 +35,11 @@ class TournamentService():
 
 
     def get_tournaments(self, page: int, limit: int)->GenericResponseModel:
-        tournaments = self.db.query(TOURNAMENT).filter(and_(TOURNAMENT.is_active==True, TOURNAMENT.is_payment_done==True)).offset(page*limit).limit(limit).all()
+        tournaments = self.db.query(TOURNAMENT).options(
+                    joinedload(TOURNAMENT.organizer).load_only(USERS.first_name, USERS.email_id)
+                ).filter(
+                    and_(TOURNAMENT.is_active==True, TOURNAMENT.is_payment_done==True)
+                ).offset(page*limit).limit(limit).all()
         tournaments_list = [model_to_dict(t) for t in tournaments]
 
         return GenericResponseModel(status='success', message='Tournament details', data=tournaments_list, status_code=http.HTTPStatus.ACCEPTED)
@@ -50,7 +54,7 @@ class TournamentService():
         return {'status': 'success', 'data': tournament, 'message': 'Tournament details found', 'status_code':http.HTTPStatus.ACCEPTED}
 
 
-    def get_tournament_games(self, tournament_id: str, user_id: str):
+    def get_tournament_games(self, tournament_id: str):
         games = self.db.query(TOURNAMENT_GAMES).filter(TOURNAMENT_GAMES.tournament_id==tournament_id).all()
         g_list = [model_to_dict(g) for g in games]
         return GenericResponseModel(status='success', message='Games', data=g_list, status_code=http.HTTPStatus.ACCEPTED)

@@ -26,6 +26,8 @@ class Tournament(BaseModel):
     name: str
     about: str
     organizer_id: str
+    organizer_name: str
+    organizer_info: str
     start_date: datetime.datetime
     end_date: datetime.datetime
     is_payment_done: bool = True
