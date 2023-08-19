@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes.index import playersRouter, organizerRouter, adminRouter, userRouter,tournamentRouter, generalRouter, fixturesRouter
+from routes.index import playersRouter, organizerRouter, adminRouter, userRouter,tournamentRouter, generalRouter, fixturesRouter, vtbRouter, footballRouter
 from config.db import get_db, engine
 import models.index as models
 # from fastapi_pagination import add_pagination
@@ -20,5 +20,7 @@ app.include_router(organizerRouter, prefix='/organizer', tags=["Organizer"])
 app.include_router(tournamentRouter, prefix='/tournaments', tags=["Tournament"])
 app.include_router(generalRouter, prefix='/general', tags=["General"])
 app.include_router(fixturesRouter, prefix='/fixtures', tags=["Fixtures"])
+app.include_router(vtbRouter, prefix='/VTB', tags=["VTB"])
+app.include_router(footballRouter, prefix='/football', tags=["Football"])
 
 app.include_router(adminRouter, prefix='/admin', tags=["Admin"])

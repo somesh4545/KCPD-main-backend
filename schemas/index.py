@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 import datetime
 from typing import Optional, Any
+import enum
 
 class User(BaseModel):
     email_id: str
@@ -116,3 +117,48 @@ class Vtb(BaseModel):
     scored_by: str
     points: int
     fixture_id: int
+
+
+class GoalsType(str, enum.Enum):
+    NORMAL_GOAL = "Normal Goal"
+    FREE_KICK = "Free Kick"
+    OWN_GOAL = "Own Goal"
+    HEADER = "Header"
+    PENALTY = "Penalty"
+
+class Football_Goals(BaseModel):
+    team_id: str
+    scored_by: str
+    assist_by: str=None
+    goal_type: GoalsType
+    fixture_id: int
+    minute: int
+
+class Football_Cards(BaseModel):
+    fixture_id: int
+    team_id: str
+    player_id: str
+    reason: str
+    card_type: str
+    minute: int
+
+class Football_Shootout(BaseModel):
+    fixture_id: int
+    team_id: str
+    player_id: str
+    number: int
+    # 1 - scored   0 -missed
+    result: int
+
+class Football_Time(BaseModel):
+    fixture_id: int
+    duration: int
+    time_type: str
+    total_goals_scored: int
+    total_yellow_cards: int
+    total_red_cards: int
+
+
+
+
+    

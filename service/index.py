@@ -3,3 +3,4 @@ from service.fixtures_single_elimination import Fixtures_Serivce_Single_Eliminat
 from service.tournament import TournamentService
 from service.tournament_games import Tournament_Game_Service
 from service.VTB import VTB_Serivce
+from service.football import FOOTBALL_Serivce

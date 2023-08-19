@@ -1,7 +1,8 @@
 
 
-from sqlalchemy import Column, ForeignKey, Integer, String, Float, Date, DateTime, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, String, Float, Date, DateTime, Boolean, Enum
 from sqlalchemy.orm import relationship
+import enum
 import datetime
 from config.db import Base
 
@@ -212,3 +213,65 @@ class VTB(Base):
     fixture = relationship("FIXTURES")
     created_at = Column(DateTime, default=datetime.datetime.now)
 
+
+
+
+# tables needed for doing football games 
+class GoalsType(str, enum.Enum):
+    NORMAL_GOAL = "Normal Goal"
+    FREE_KICK = "Free Kick"
+    OWN_GOAL = "Own Goal"
+    HEADER = "Header"
+    PENALTY = "Penalty"
+
+class FOOTBALL_GOALS(Base):
+    __tablename__ ="FOOTBALL_GOALS"
+    id = Column(Integer, primary_key=True)
+    team_id =  Column(String(30), ForeignKey("TEAMS.id"), nullable=False)
+    team = relationship("TEAMS")
+    scored_by = Column(String(30), ForeignKey("USERS.id"), nullable=False)
+    scorer = relationship("USERS", foreign_keys=[scored_by])
+    assist_by = Column(String(30), ForeignKey("USERS.id"), nullable=True)
+    assist = relationship("USERS", foreign_keys=[assist_by])
+    goal_type = Column(Enum(GoalsType), nullable=False)
+    fixture_id = Column(Integer, ForeignKey("FIXTURES.id"))
+    fixture = relationship("FIXTURES")
+    minute = Column(Integer)
+
+class FOOTBALL_CARDS(Base):
+    __tablename__="FOOTBALL_CARDS"
+    id = Column(Integer,primary_key= True )
+    fixture_id = Column(Integer, ForeignKey("FIXTURES.id"))
+    fixture = relationship("FIXTURES")
+    team_id =  Column(String(30), ForeignKey("TEAMS.id"), nullable=False)
+    team = relationship("TEAMS")
+    player_id = Column(String(30), ForeignKey("USERS.id"), nullable=False)
+    player = relationship("USERS")
+    reason = Column(String(50), nullable=True)
+    card_type = Column(String(50), nullable=False)
+    minute = Column(Integer)
+
+
+class FOOTBALL_SHOOTOUT(Base):
+    __tablename__="FOOTBALL_SHOOTOUT"
+    id = Column(Integer,primary_key= True )
+    fixture_id = Column(Integer, ForeignKey("FIXTURES.id"))
+    fixture = relationship("FIXTURES")
+    team_id =  Column(String(30), ForeignKey("TEAMS.id"), nullable=False)
+    team = relationship("TEAMS")
+    player_id = Column(String(30), ForeignKey("USERS.id"), nullable=False)
+    player = relationship("USERS")
+    number = Column(Integer)
+    # 1 - scored   0 -missed
+    result = Column(Integer, nullable=False)
+
+class FOOTBALL_TIME(Base):
+    __tablename__="FOOTBALL_TIME"
+    id = Column(Integer,primary_key= True )
+    fixture_id = Column(Integer, ForeignKey("FIXTURES.id"))
+    fixture = relationship("FIXTURES")
+    duration = Column(Integer)
+    time_type = Column(String(30), nullable=False)
+    total_goals_scored = Column(Integer)    
+    total_yellow_cards = Column(Integer)    
+    total_red_cards = Column(Integer)    

@@ -94,8 +94,8 @@ class Tournament_Game_Service():
 
     def get_fixture_by_id(self, fixture_id: int, user_id: str):
         fixture = self.db.query(FIXTURES).options(
-            joinedload(FIXTURES.team_1).load_only(TEAMS.name),
-            joinedload(FIXTURES.team_2).load_only(TEAMS.name),
+            joinedload(FIXTURES.team_1).load_only(TEAMS.name).joinedload(TEAMS.team_players).load_only(TEAM_PLAYERS.id).joinedload(TEAM_PLAYERS.player).load_only(USERS.first_name),
+            joinedload(FIXTURES.team_2).load_only(TEAMS.name).joinedload(TEAMS.team_players).load_only(TEAM_PLAYERS.id).joinedload(TEAM_PLAYERS.player).load_only(USERS.first_name),
             joinedload(FIXTURES.winner).load_only(TEAMS.name),
             joinedload(FIXTURES.ground).load_only(GROUNDS.name, GROUNDS.location),
             joinedload(FIXTURES.umpire).load_only(USERS.first_name),

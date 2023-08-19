@@ -178,7 +178,7 @@ class TournamentService():
 
     # service for getting registered teams for the given tournament and game id
     def get_registered_teams(self, tournament_id: str, tournament_game_id: str):
-        registered_teams = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id)).all()
+        registered_teams = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id)).order_by(TEAMS.createdAt).all()
 
         if registered_teams is None or len(registered_teams)==0:
             return GenericResponseModel(status='error', message='Invalid tournament id or game id or no teams found', status_code=http.HTTPStatus.BAD_REQUEST)
@@ -203,4 +203,4 @@ class TournamentService():
             # return GenericResponseModel(status='success', message='Teams approved, Please reload max teams reached', status_code=http.HTTPStatus.BAD_REQUEST)
 
         self.db.commit()
-        return GenericResponseModel(status='success', message='Teams approved, Reload if needed', status_code=http.HTTPStatus.BAD_REQUEST)
+        return GenericResponseModel(status='success', message='Teams approved, Reload if needed', status_code=http.HTTPStatus.OK)
