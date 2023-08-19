@@ -27,7 +27,7 @@ class FOOTBALL_Serivce():
 
     # add score
     def add_goal(self, goal: Football_Goals, fixture_id: int):
-        check = self.db.query(FIXTURES).filter(FIXTURES.id==fixture_id).first()
+        check = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.game_id==4)).first()
         if check is None:
             return GenericResponseModel(status='error', message='Invalid details passed', status_code=http.HTTPStatus.BAD_REQUEST)
         
@@ -38,7 +38,7 @@ class FOOTBALL_Serivce():
     
 
     def delete_goal(self, goal_id:int, fixture_id:int):
-        check = self.db.query(FIXTURES).filter(FIXTURES.id==fixture_id).first()
+        check = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.game_id==4)).first()
         if check is None:
             return GenericResponseModel(status='error', message='Invalid details passed', status_code=http.HTTPStatus.BAD_REQUEST)
         
@@ -47,8 +47,8 @@ class FOOTBALL_Serivce():
         return GenericResponseModel(status='success', message='Goal delete', status_code=http.HTTPStatus.OK)
 
 
-    def give_card(self, card: Football_Cards, fixture_id: int):
-        check = self.db.query(FIXTURES).filter(FIXTURES.id==fixture_id).first()
+    def give_card(self, card: Football_Cards, fixture_id: int):        
+        check = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.game_id==4)).first()
         if check is None:
             return GenericResponseModel(status='error', message='Invalid details passed', status_code=http.HTTPStatus.BAD_REQUEST)
         obj = FOOTBALL_CARDS(**card.dict())
@@ -58,7 +58,7 @@ class FOOTBALL_Serivce():
     
 
     def add_shootout(self, shootout: Football_Shootout,fixture_id: int):
-        check = self.db.query(FIXTURES).filter(FIXTURES.id==fixture_id).first()
+        check = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.game_id==4)).first()
         if check is None:
             return GenericResponseModel(status='error', message='Invalid details passed', status_code=http.HTTPStatus.BAD_REQUEST)
         obj = FOOTBALL_SHOOTOUT(**shootout.dict())
@@ -68,7 +68,7 @@ class FOOTBALL_Serivce():
     
 
     def delete_shootout(self, shootout_id:int, fixture_id:int):
-        check = self.db.query(FIXTURES).filter(FIXTURES.id==fixture_id).first()
+        check = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.game_id==4)).first()
         if check is None:
             return GenericResponseModel(status='error', message='Invalid details passed', status_code=http.HTTPStatus.BAD_REQUEST)
         self.db.query(FOOTBALL_SHOOTOUT).filter(and_(FOOTBALL_SHOOTOUT.fixture_id==fixture_id, FOOTBALL_SHOOTOUT.id==shootout_id)).delete()
@@ -77,7 +77,7 @@ class FOOTBALL_Serivce():
 
 
     def add_time_halfs(self, time_half:Football_Time, fixture_id:int):
-        check = self.db.query(FIXTURES).filter(FIXTURES.id==fixture_id).first()
+        check = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.game_id==4)).first()
         if check is None:
             return GenericResponseModel(status='error', message='Invalid details passed', status_code=http.HTTPStatus.BAD_REQUEST)
         obj = FOOTBALL_TIME(**time_half.dict())

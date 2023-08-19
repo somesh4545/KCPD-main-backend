@@ -79,16 +79,13 @@ async def get_fixtures(tournament_id:str, tournament_game_id: str, game_id:int, 
 
 # tournament_type - 1(single elimination) 2(playoffs just like ipl)
 @organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/')
-async def create_fixtures(tournament_id:str, tournament_game_id: str, game_id:int,tournament_type:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
-    """
-    tournament_type: 1 for signle elimintation 2 for league 
-    """
-    return Tournament_Game_Service(db).create_fixtures(tournament_id, tournament_game_id, game_id, tournament_type, user_id)
+async def create_fixtures(tournament_id:str, tournament_game_id: str, game_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).create_fixtures(tournament_id, tournament_game_id, game_id, user_id)
 
 
 @organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/applyfixtures/')
-async def apply_fixtures(tournament_id:str, tournament_game_id: str,game_id:int, tournament_type:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
-    return Tournament_Game_Service(db).apply_fixtures(tournament_id, tournament_game_id, game_id, tournament_type, user_id)
+async def apply_fixtures(tournament_id:str, tournament_game_id: str,game_id:int, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).apply_fixtures(tournament_id, tournament_game_id, game_id, user_id)
 
 
 # define buy if any match needs to be given buy if opponent is not there

@@ -107,19 +107,25 @@ class Tournament_Game_Service():
 
 
     # def create_fixtures(self, tournament_id: str, tournament_game_id: str, user_id: str)
-    def create_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, tournament_type: int, user_id: str):
-        if tournament_type ==1:
+    def create_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, user_id: str):
+        game = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.type)).filter(and_(TOURNAMENT_GAMES.id==tournament_game_id)).first()
+        if game is None:
+            return GenericResponseModel(status='error', message="Invalid tournament game id passed", status_code=http.HTTPStatus.BAD_REQUEST)
+        if game.type ==1:
             return Fixtures_Serivce_Single_Elimination(self.db).create_fixtures(tournament_id, tournament_game_id, game_id, user_id)
-        if tournament_type == 2:
+        if game.type == 2:
             return Fixtures_Service_League(self.db).create_fixtures(tournament_id, tournament_game_id, game_id, user_id)
 
         return GenericResponseModel(status='error', message="Mention tournament type", status_code=http.HTTPStatus.BAD_REQUEST)
 
 
-    def apply_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, tournament_type: int, user_id: str):
-        if tournament_type ==1:
+    def apply_fixtures(self, tournament_id:str, tournament_game_id: str,game_id:int, user_id: str):
+        game = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.type)).filter(and_(TOURNAMENT_GAMES.id==tournament_game_id)).first()
+        if game is None:
+            return GenericResponseModel(status='error', message="Invalid tournament game id passed", status_code=http.HTTPStatus.BAD_REQUEST)
+        if game.type ==1:
             return Fixtures_Serivce_Single_Elimination(self.db).apply_fixtures(tournament_id, tournament_game_id)
-        if tournament_type == 2:
+        if game.type == 2:
             return Fixtures_Service_League(self.db).apply_fixtures(tournament_id, tournament_game_id)
         
         
