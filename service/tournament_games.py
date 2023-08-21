@@ -209,7 +209,8 @@ class Tournament_Game_Service():
         return GenericResponseModel(status='success', message="Fixture winner successfully updated", status_code=http.HTTPStatus.ACCEPTED)
     
 
-    def post_match_results(self, tournament_game_id: str, fixture_id:int, winner: Winners):
+    def post_match_results(self, tournament_game_id: str, fixture_id:int, winner: Winners, loser: Losers):
+        
         fixture = self.db.query(FIXTURES).filter(and_(FIXTURES.id==fixture_id, FIXTURES.tournament_game_id==tournament_game_id)).first()
         if fixture is None:
             return GenericResponseModel(status='error', message="Fixtures not found", status_code=http.HTTPStatus.BAD_REQUEST)
@@ -217,12 +218,20 @@ class Tournament_Game_Service():
         if fixture.team_1_id!=winner.winner_id and fixture.team_2_id!=winner.winner_id:
             return GenericResponseModel(status='error', message="Invalid winner declared", status_code=http.HTTPStatus.BAD_REQUEST)
 
+        team_loser = self.db.query(TEAMS).filter(TEAMS.id==loser.loser_id).first()
+        if team_loser is None:    
+            return GenericResponseModel(status='error', message="Team not found", status_code=http.HTTPStatus.BAD_REQUEST)
+        
         fixture.winner_id = winner.winner_id
 
         #updating the team points and net run rate if any
         team = self.db.query(TEAMS).filter(TEAMS.id==winner.winner_id).first()
         team.points = (0 if team.points==None else team.points) + winner.points
         team.nr = (0 if team.nr==None else team.nr) + winner.nr
+        
+        team_loser.points =(0 if team_loser.points==None else team_loser.points) + loser.points
+        team_loser.nr = (0 if team_loser.nr==None else team_loser.nr) + loser.nr
+
         self.db.commit()
 
         t = self.db.query(TOURNAMENT_GAMES).options(load_only(TOURNAMENT_GAMES.type)).filter(TOURNAMENT_GAMES.id==tournament_game_id).first()
@@ -235,18 +244,6 @@ class Tournament_Game_Service():
                 self.check_s_and_declare_next_round(tournament_game_id, fixture.round_no)
 
         return GenericResponseModel(status='success', message="Fixture winner successfully updated", status_code=http.HTTPStatus.ACCEPTED)
-    
-
-
-    def update_losing_team_points(self, tournament_game_id: str, fixture_id:int, loser: Losers):
-        team = self.db.query(TEAMS).filter(TEAMS.id==loser.loser_id).first()
-        if team is None:    
-            return GenericResponseModel(status='error', message="Team not found", status_code=http.HTTPStatus.BAD_REQUEST)
-        
-        team.points =(0 if team.points==None else team.points) + loser.points
-        team.nr = (0 if team.nr==None else team.nr) + loser.nr
-        self.db.commit()
-        return GenericResponseModel(status='success', message="Team points updated", status_code=http.HTTPStatus.ACCEPTED)
 
 
 

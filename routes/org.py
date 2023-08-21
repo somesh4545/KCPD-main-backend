@@ -96,13 +96,13 @@ async def give_buy(tournament_id:str, tournament_game_id: str, fixture_id:int, u
 
 # define match result declaration
 @organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/{fixture_id}/results')
-async def post_match_results(tournament_id: str, tournament_game_id: str, fixture_id:int, winner: Winners, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
-    return Tournament_Game_Service(db).post_match_results(tournament_game_id, fixture_id, winner )
+async def post_match_results(tournament_id: str, tournament_game_id: str, fixture_id:int, winner: Winners, loser: Losers, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+    return Tournament_Game_Service(db).post_match_results(tournament_game_id, fixture_id, winner, loser )
     
 
-@organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/{fixture_id}/lost')
-async def update_losing_team_points(tournament_id: str, tournament_game_id: str, fixture_id:int, loser: Losers, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
-    return Tournament_Game_Service(db).update_losing_team_points(tournament_game_id, fixture_id, loser )
+# @organizerRouter.post('/tournament/{tournament_id}/games/{tournament_game_id}/fixtures/{fixture_id}/lost')
+# async def update_losing_team_points(tournament_id: str, tournament_game_id: str, fixture_id:int, loser: Losers, user_id: str=Depends(get_current_user), db: Session=Depends(get_db)):
+#     return Tournament_Game_Service(db).update_losing_team_points(tournament_game_id, fixture_id, loser )
     
 
 
