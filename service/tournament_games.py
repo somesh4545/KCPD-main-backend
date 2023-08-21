@@ -262,7 +262,6 @@ class Tournament_Game_Service():
                 return GenericResponseModel(status='error', message="Invalid details passed", status_code=http.HTTPStatus.BAD_REQUEST)
 
             return {'status': 'success', 'message': "Team standings", 'data': teams, 'status_code': http.HTTPStatus.OK}
-
         
         if t_obj.type == 2:
             teams = self.db.query(TEAMS).options(

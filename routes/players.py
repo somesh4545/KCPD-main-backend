@@ -33,8 +33,9 @@ async def join_team(team: Teams,  team_id: str, user_id: str=Depends(get_current
 @playersRouter.get('/team/{team_id}')
 async def get_team_by_id(team_id: str, user_id: str=Depends(get_current_user), db: Session = Depends(get_db)):
     team = db.query(TEAMS).options(
-        joinedload(TEAMS.admin).load_only(USERS.first_name, USERS.email_id),
-        joinedload(TEAMS.team_players).load_only(TEAM_PLAYERS.id).joinedload(TEAM_PLAYERS.player).load_only(USERS.first_name, USERS.email_id)
+        load_only(TEAMS.admin_id, TEAMS.createdAt, TEAMS.no_of_boys, TEAMS.no_of_girls),
+        joinedload(TEAMS.admin).load_only(USERS.first_name, USERS.email_id, USERS.profile_url, USERS.last_name, USERS.dob, USERS.gender),
+        joinedload(TEAMS.team_players).load_only(TEAM_PLAYERS.id).joinedload(TEAM_PLAYERS.player).load_only(USERS.first_name, USERS.email_id, USERS.profile_url, USERS.last_name, USERS.dob, USERS.gender),
     ).filter(TEAMS.id == team_id).first()
     if team is None:
         return GenericResponseModel(status='error', message='Invalid team id passed', status_code=http.HTTPStatus.BAD_REQUEST)
