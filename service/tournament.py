@@ -1,7 +1,7 @@
 from schemas.index import GenericResponseModel, Tournament, Tournament_Games, Teams, TeamPlayers, Umpires, Grounds
 from models.index import TOURNAMENT, USERS, TOURNAMENT_GAMES, TEAMS, TEAM_PLAYERS, UMPIRES, GROUNDS
 from sqlalchemy.orm import Session, joinedload, load_only
-from sqlalchemy import and_,desc
+from sqlalchemy import and_,desc,func
 import shortuuid
 from utils.general import model_to_dict
 import http
@@ -40,21 +40,24 @@ class TournamentService():
 
     def get_tournaments(self, page: int, limit: int, user_id:str = None)->GenericResponseModel:
         if user_id is None:
-            tournaments = self.db.query(TOURNAMENT).options(
-                        joinedload(TOURNAMENT.organizer).load_only(USERS.first_name, USERS.email_id),
-                        # joinedload(TOURNAMENT.tournament).
-                    ).filter(
-                        and_(TOURNAMENT.is_payment_done==True ,TOURNAMENT.is_active==True)
-                    ).order_by(desc(TOURNAMENT.start_date)).offset(page*limit).limit(limit).all()
-
+            tournaments = self.db.query(
+                    TOURNAMENT, func.count(TOURNAMENT_GAMES.id).label('game_count'),
+                    func.max(TOURNAMENT_GAMES.prize_pool).label('max_prize'),
+                    func.min(TOURNAMENT_GAMES.participation_fees).label('participation_fees')
+                ).join(TOURNAMENT_GAMES).filter(
+                    and_(TOURNAMENT.is_active == True, TOURNAMENT.is_payment_done==True)
+                ).group_by(TOURNAMENT).order_by(
+                    desc(TOURNAMENT.start_date)
+                ).offset(page * limit).limit(limit).all()
             return {'status': 'success', 'data': tournaments, 'message': 'Tournament details', 'status_code':http.HTTPStatus.OK}
         else:
-            tournaments = self.db.query(TOURNAMENT).options(
-                        joinedload(TOURNAMENT.organizer).load_only(USERS.first_name, USERS.email_id),
-                        # joinedload(TOURNAMENT.tournament).
-                    ).filter(
-                        and_(TOURNAMENT.organizer_id==user_id)
-                    ).order_by(desc(TOURNAMENT.start_date)).offset(page*limit).limit(limit).all()
+            tournaments = self.db.query(
+                    TOURNAMENT, func.count(TOURNAMENT_GAMES.id).label('game_count')
+                ).join(TOURNAMENT_GAMES).filter(
+                     and_(TOURNAMENT.organizer_id==user_id)
+                ).group_by(TOURNAMENT).order_by(
+                    desc(TOURNAMENT.start_date)
+                ).offset(page * limit).limit(limit).all()
 
             return {'status': 'success', 'data': tournaments, 'message': 'Tournament details', 'status_code':http.HTTPStatus.OK}
         
