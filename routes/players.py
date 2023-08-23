@@ -18,9 +18,9 @@ playersRouter = APIRouter()
 async def fetch_all_players(db: Session = Depends(get_db)):
     return db.query(PLAYERS).all()
 
-@playersRouter.post('/plays')
-async def add_plays(game: str, user_id: str, db: Session = Depends(get_db)):
-    pass
+# @playersRouter.post('/plays')
+# async def add_plays(game: str, user_id: str, db: Session = Depends(get_db)):
+#     pass
 
 @playersRouter.post('/create_team')
 async def join_game(team: Teams, user_id: str=Depends(get_current_user), db: Session = Depends(get_db)):

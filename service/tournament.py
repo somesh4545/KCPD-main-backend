@@ -1,7 +1,7 @@
 from schemas.index import GenericResponseModel, Tournament, Tournament_Games, Teams, TeamPlayers, Umpires, Grounds
 from models.index import TOURNAMENT, USERS, TOURNAMENT_GAMES, TEAMS, TEAM_PLAYERS, UMPIRES, GROUNDS
 from sqlalchemy.orm import Session, joinedload, load_only
-from sqlalchemy import and_
+from sqlalchemy import and_,desc
 import shortuuid
 from utils.general import model_to_dict
 import http
@@ -12,6 +12,20 @@ class TournamentService():
     def __init__(self, db: Session):
         self.db = db
     
+
+    def get_tournaments(self, user_id:str, page: int, limit: int)->GenericResponseModel:
+        tournaments = self.db.query(TOURNAMENT).options(
+                    joinedload(TOURNAMENT.organizer).load_only(USERS.first_name, USERS.email_id),
+                    # joinedload(TOURNAMENT.tournament).
+                ).filter(
+                    and_(TOURNAMENT.organizer_id==user_id)
+                ).order_by(desc(TOURNAMENT.start_date)).offset(page*limit).limit(limit).all()
+
+        tournaments_list = [model_to_dict(t) for t in tournaments]
+
+        return GenericResponseModel(status='success', message='Tournament details', data=tournaments_list, status_code=http.HTTPStatus.ACCEPTED)
+    
+
 
     def create_tournament(self, tournament: Tournament):
         t = TOURNAMENT(**tournament.dict())
@@ -34,16 +48,7 @@ class TournamentService():
         return GenericResponseModel(status='success', message='Tournament details updated', status_code=http.HTTPStatus.ACCEPTED)
 
 
-    def get_tournaments(self, page: int, limit: int)->GenericResponseModel:
-        tournaments = self.db.query(TOURNAMENT).options(
-                    joinedload(TOURNAMENT.organizer).load_only(USERS.first_name, USERS.email_id)
-                ).filter(
-                    and_(TOURNAMENT.is_active==True, TOURNAMENT.is_payment_done==True)
-                ).offset(page*limit).limit(limit).all()
-        tournaments_list = [model_to_dict(t) for t in tournaments]
-
-        return GenericResponseModel(status='success', message='Tournament details', data=tournaments_list, status_code=http.HTTPStatus.ACCEPTED)
-    
+   
     
     # .options(joinedload(Matches.team_1).load_only(Teams.name), joinedload(Matches.team_2).load_only(Teams.name))
     def get_tournament_by_id(self, tournament_id: str):
@@ -178,14 +183,15 @@ class TournamentService():
 
     # service for getting registered teams for the given tournament and game id
     def get_registered_teams(self, tournament_id: str, tournament_game_id: str):
-        registered_teams = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id)).order_by(TEAMS.createdAt).all()
+        registered_teams = self.db.query(TEAMS).options(
+            joinedload(TEAMS.admin).load_only(USERS.first_name, USERS.profile_url, USERS.last_name, USERS.dob, USERS.gender),
+        ).filter(and_(TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id)).order_by(TEAMS.createdAt).all()
 
         if registered_teams is None or len(registered_teams)==0:
             return GenericResponseModel(status='error', message='Invalid tournament id or game id or no teams found', status_code=http.HTTPStatus.BAD_REQUEST)
 
-        teams_list = [model_to_dict(t) for t in registered_teams]
-        return GenericResponseModel(status='success', message='Teams registered', data=teams_list, status_code=http.HTTPStatus.ACCEPTED)
-    
+        return {'status': 'success', 'data': registered_teams, 'message': 'Teams registered', 'status_code':http.HTTPStatus.OK}
+
     
     def team_verification(self,tournament_id: str, tournament_game_id: str, team_id: str, approve: str, max_teams: int):
         count = self.db.query(TEAMS).filter(and_(TEAMS.tournament_id==tournament_id, TEAMS.tournament_game_id==tournament_game_id, TEAMS.verified==1)).count()

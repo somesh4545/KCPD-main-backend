@@ -6,6 +6,7 @@ import enum
 import datetime
 from config.db import Base
 
+
 class USERS(Base):
     __tablename__ = "USERS"
     
@@ -69,6 +70,8 @@ class TOURNAMENT(Base):
     end_date = Column(DateTime, nullable=False)
     is_payment_done = Column(Boolean, default=True)
     is_active = Column(Boolean, default=True)
+    tournament_games = relationship("TOURNAMENT_GAMES", back_populates="tournament")
+
 
 class GAMES(Base):
     __tablename__ = "GAMES"
@@ -107,6 +110,7 @@ class TOURNAMENT_GAMES(Base):
     end_date = Column(DateTime, nullable=False)
     umpires = relationship("UMPIRES", back_populates="game")
     grounds = relationship("GROUNDS", back_populates="game")
+    tournament = relationship("TOURNAMENT", back_populates="tournament_games")
 
 
 class TEAMS(Base):
