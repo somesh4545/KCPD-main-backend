@@ -3,11 +3,20 @@ from routes.index import playersRouter, organizerRouter, adminRouter, userRouter
 from config.db import get_db, engine
 import models.index as models
 # from fastapi_pagination import add_pagination
+from fastapi.middleware.cors import CORSMiddleware
 
 models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # add_pagination(app)
 
 @app.get('/')
