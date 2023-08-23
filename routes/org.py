@@ -20,13 +20,16 @@ from typing import List
 #routes
 organizerRouter = APIRouter()
 
-# @organizerRouter.get('/')
-# async def fetch_all_org(db: Session = Depends(get_db)):
-#     return  db.query(ORGANIZERS).all()
+
+@organizerRouter.get('/stats')
+async def get_stats(user_id: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    response = TournamentService(db).get_stats(user_id)
+    return response
+
 
 @organizerRouter.get('/tournament')
-async def get_tournaments_of_organizer(page: int = Query(0, ge=0), limit: int = Query(5, le=100), user_id: str = Depends(get_current_user), db: Session = Depends(get_db))->GenericResponseModel:
-    response = TournamentService(db).get_tournaments(user_id, page, limit)
+async def get_tournaments_of_organizer(page: int = Query(0, ge=0), limit: int = Query(5, le=100), user_id: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    response = TournamentService(db).get_tournaments(page, limit, user_id)
     return response
 
 

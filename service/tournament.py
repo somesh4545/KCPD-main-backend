@@ -13,18 +13,52 @@ class TournamentService():
         self.db = db
     
 
-    def get_tournaments(self, user_id:str, page: int, limit: int)->GenericResponseModel:
+    def get_stats(self, user_id: str):
         tournaments = self.db.query(TOURNAMENT).options(
-                    joinedload(TOURNAMENT.organizer).load_only(USERS.first_name, USERS.email_id),
-                    # joinedload(TOURNAMENT.tournament).
-                ).filter(
-                    and_(TOURNAMENT.organizer_id==user_id)
-                ).order_by(desc(TOURNAMENT.start_date)).offset(page*limit).limit(limit).all()
+            load_only(TOURNAMENT.is_active, TOURNAMENT.is_payment_done)
+        ).filter(and_(TOURNAMENT.organizer_id == user_id)).all()
 
-        tournaments_list = [model_to_dict(t) for t in tournaments]
+        newT, activeT, doneT = 0, 0, 0
+        for t in tournaments:
+            if t.is_active==True and t.is_payment_done==True:
+                activeT += 1
+            elif t.is_active==True and t.is_payment_done==False:
+                newT += 1
+            elif t.is_active==False and t.is_payment_done==True:
+                doneT += 1
 
-        return GenericResponseModel(status='success', message='Tournament details', data=tournaments_list, status_code=http.HTTPStatus.ACCEPTED)
-    
+        data = {
+            'newT': newT,
+            'activeT': activeT,
+            'doneT': doneT,
+            'overall': '%s / %s' % (doneT, (newT+activeT+doneT)),
+        }
+        return GenericResponseModel(status='success', message='Stats', data=data, status_code=http.HTTPStatus.ACCEPTED)
+        
+        
+
+
+    def get_tournaments(self, page: int, limit: int, user_id:str = None)->GenericResponseModel:
+        if user_id is None:
+            tournaments = self.db.query(TOURNAMENT).options(
+                        joinedload(TOURNAMENT.organizer).load_only(USERS.first_name, USERS.email_id),
+                        # joinedload(TOURNAMENT.tournament).
+                    ).filter(
+                        and_(TOURNAMENT.is_payment_done==True ,TOURNAMENT.is_active==True)
+                    ).order_by(desc(TOURNAMENT.start_date)).offset(page*limit).limit(limit).all()
+
+            return {'status': 'success', 'data': tournaments, 'message': 'Tournament details', 'status_code':http.HTTPStatus.OK}
+        else:
+            tournaments = self.db.query(TOURNAMENT).options(
+                        joinedload(TOURNAMENT.organizer).load_only(USERS.first_name, USERS.email_id),
+                        # joinedload(TOURNAMENT.tournament).
+                    ).filter(
+                        and_(TOURNAMENT.organizer_id==user_id)
+                    ).order_by(desc(TOURNAMENT.start_date)).offset(page*limit).limit(limit).all()
+
+            return {'status': 'success', 'data': tournaments, 'message': 'Tournament details', 'status_code':http.HTTPStatus.OK}
+        
+            
 
 
     def create_tournament(self, tournament: Tournament):

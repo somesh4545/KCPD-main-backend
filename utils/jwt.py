@@ -8,7 +8,7 @@ from fastapi import status, HTTPException
 from pydantic import ValidationError
 from schemas.index import TokenPayload
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # 30 minutes
+ACCESS_TOKEN_EXPIRE_MINUTES = 24*60  # 30 minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
 ALGORITHM = "HS256"
 JWT_SECRET_KEY = "KCPD_backend"     # should be kept secret

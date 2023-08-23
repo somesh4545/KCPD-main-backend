@@ -24,7 +24,7 @@ tournamentRouter = APIRouter()
 #     return TournamentService(db).create_tournament(tournament)
 
 @tournamentRouter.get('/')
-async def get_tournaments(page: int = Query(0, ge=0), limit: int = Query(5, le=100), db: Session = Depends(get_db))->GenericResponseModel:
+async def get_tournaments(page: int = Query(0, ge=0), limit: int = Query(5, le=100), db: Session = Depends(get_db)):
     return TournamentService(db).get_tournaments(page, limit)
 
 @tournamentRouter.get('/{tournament_id}')
