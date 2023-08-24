@@ -4,3 +4,4 @@ from service.tournament import TournamentService
 from service.tournament_games import Tournament_Game_Service
 from service.VTB import VTB_Serivce
 from service.football import FOOTBALL_Serivce
+from service.players import PLAYERS_Serivce

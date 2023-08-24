@@ -7,7 +7,7 @@ from config.db import get_db
 from utils.jwt import  get_current_user
 from uuid import uuid4
 from sqlalchemy import and_
-from service.index import TournamentService
+from service.index import TournamentService,PLAYERS_Serivce
 import http
 from utils.general import model_to_dict
 
@@ -41,3 +41,10 @@ async def get_team_by_id(team_id: str, user_id: str=Depends(get_current_user), d
         return GenericResponseModel(status='error', message='Invalid team id passed', status_code=http.HTTPStatus.BAD_REQUEST)
 
     return {'status': 'success', 'message': 'Team details', 'status_code': http.HTTPStatus.OK, 'data': team}
+
+
+@playersRouter.get('/previous_participation')
+async def get_previous_participation( user_id: str=Depends(get_current_user), db: Session = Depends(get_db)):
+    pass
+    response = PLAYERS_Serivce(db).get_previous_participation(user_id)
+    return response
