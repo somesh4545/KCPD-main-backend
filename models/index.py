@@ -134,7 +134,8 @@ class TEAMS(Base):
     nr = Column(Float, nullable=None)
     # ends
     team_players = relationship("TEAM_PLAYERS", back_populates="team")
-    createdAt = Column(DateTime, default=datetime.datetime.utcnow)
+    createdAt = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)
+
 
 class TEAM_PLAYERS(Base):
     __tablename__ = "TEAM_PLAYERS"
@@ -145,6 +146,7 @@ class TEAM_PLAYERS(Base):
     player = relationship("USERS")
     createdAt = Column(DateTime, default=datetime.datetime.utcnow)
 
+
 class UMPIRES(Base):
     __tablename__ = 'UMPIRES'
     id = Column(Integer,primary_key=True , index= True )
@@ -152,6 +154,7 @@ class UMPIRES(Base):
     user =relationship("USERS")
     game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id'))
     game = relationship("TOURNAMENT_GAMES", back_populates="umpires")
+    
 
 class GROUNDS(Base):
     __tablename__='GROUNDS'
@@ -161,6 +164,7 @@ class GROUNDS(Base):
     game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id'))
     game = relationship("TOURNAMENT_GAMES", back_populates="grounds")
     location = Column(String(100), default=None)
+
 
 
 class FIXTURES(Base):
@@ -279,3 +283,16 @@ class FOOTBALL_TIME(Base):
     total_goals_scored = Column(Integer)    
     total_yellow_cards = Column(Integer)    
     total_red_cards = Column(Integer)    
+
+
+# class for users past participation
+class U_PAST_PARTICIPATION(Base):
+    __tablename__="U_PAST_PARTICIPATION"
+    id = Column(Integer,primary_key=True)
+    user_id = Column(String(30), ForeignKey("USERS.id"), nullable=False)
+    user = relationship("USERS")
+    tournament_game_id = Column(String(30), ForeignKey('TOURNAMENT_GAMES.id',ondelete="CASCADE"), nullable=False)
+    tournament_game = relationship("TOURNAMENT_GAMES")
+    team_id = Column(String(30), ForeignKey('TEAMS.id',ondelete="CASCADE"), nullable=False)
+    team = relationship("TEAMS")
+    createdAt = Column(DateTime, nullable=False, default=datetime.datetime.utcnow)

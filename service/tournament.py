@@ -1,5 +1,5 @@
 from schemas.index import GenericResponseModel, Tournament, Tournament_Games, Teams, TeamPlayers, Umpires, Grounds
-from models.index import TOURNAMENT, USERS, TOURNAMENT_GAMES, TEAMS, TEAM_PLAYERS, UMPIRES, GROUNDS
+from models.index import TOURNAMENT, USERS, TOURNAMENT_GAMES, TEAMS, TEAM_PLAYERS, U_PAST_PARTICIPATION
 from sqlalchemy.orm import Session, joinedload, load_only
 from sqlalchemy import and_,desc,func
 import shortuuid
@@ -197,8 +197,10 @@ class TournamentService():
         team_obj.id = shortuuid.uuid()[:16]
         team_id = team_obj.id
         team_player_obj = TEAM_PLAYERS(team_id=team_id, player_id=user_id)
+        u_past_p_obj = U_PAST_PARTICIPATION(user_id=user_id, tournament_game_id=team.tournament_game_id, team_id=team_id)
         self.db.add(team_obj)
         self.db.add(team_player_obj)
+        self.db.add(u_past_p_obj)
         self.db.commit()
 
         return GenericResponseModel(status='success', message='Team created successfully', data={'team_id': team_id}, status_code=http.HTTPStatus.ACCEPTED)     
@@ -213,6 +215,8 @@ class TournamentService():
             return checker_result
         
         team_player = TEAM_PLAYERS(team_id= team_id, player_id= user_id)
+        u_past_p_obj = U_PAST_PARTICIPATION(user_id=user_id, tournament_game_id=team.tournament_game_id, team_id=team_id)
+        self.db.add(u_past_p_obj)
         self.db.add(team_player)
         self.db.commit()
         return GenericResponseModel(status='success', message='Team player added successfully',  status_code=http.HTTPStatus.ACCEPTED)

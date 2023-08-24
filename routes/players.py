@@ -45,6 +45,12 @@ async def get_team_by_id(team_id: str, user_id: str=Depends(get_current_user), d
 
 @playersRouter.get('/previous_participation')
 async def get_previous_participation( user_id: str=Depends(get_current_user), db: Session = Depends(get_db)):
-    pass
     response = PLAYERS_Serivce(db).get_previous_participation(user_id)
+    return response
+
+
+# to check if user has any umpiring duty
+@playersRouter.get('/umpiring_task')
+async def get_umpiring_tasks( user_id: str=Depends(get_current_user), db: Session = Depends(get_db)):
+    response = PLAYERS_Serivce(db).get_umpiring_tasks(user_id)
     return response
