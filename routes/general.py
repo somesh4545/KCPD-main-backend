@@ -23,12 +23,11 @@ async def get_all_games(db: Session = Depends(get_db)):
 
 @generalRouter.get('/validate_user')
 async def get_user_id(email_id: str, user_id: str=Depends(get_current_user),db: Session = Depends(get_db)):
-    result = db.query(USERS).filter(USERS.email_id==email_id).options(
+    result = db.query(USERS).options(
             load_only(USERS.first_name, USERS.email_id, USERS.profile_url)
-        ).first()
+        ).filter(USERS.email_id==email_id).first()
     
     if result is None:
         return GenericResponseModel(status='error', message='Invalid email id', status_code=http.HTTPStatus.BAD_REQUEST)
-
-    return GenericResponseModel(status='success', data=model_to_dict(result),message='User found', status_code=http.HTTPStatus.OK)
+    return {'status': 'success', 'message': "User details", 'status_code': http.HTTPStatus.OK, 'data': result}
     
